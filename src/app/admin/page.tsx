@@ -15,6 +15,7 @@ export default function AdminPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [folders, setFolders] = useState<Folder[]>([]);
+  const [messages, setMessages] = useState<any[]>([]);
   const [newFolderName, setNewFolderName] = useState("");
   const [selectedParent, setSelectedParent] = useState<{id: string, name: string} | null>(null);
   const [error, setError] = useState("");
@@ -30,6 +31,7 @@ export default function AdminPage() {
     if (res.ok) {
       setIsLoggedIn(true);
       fetchFolders();
+      fetchMessages();
     } else {
       setError("Access Denied: Invalid Credentials");
     }
@@ -40,6 +42,14 @@ export default function AdminPage() {
       const res = await fetch("/api/admin/folders");
       const data = await res.json();
       if (Array.isArray(data)) setFolders(data);
+    } catch (e) { console.error(e); }
+  };
+
+  const fetchMessages = async () => {
+    try {
+      const res = await fetch("/api/admin/messages");
+      const data = await res.json();
+      if (Array.isArray(data)) setMessages(data);
     } catch (e) { console.error(e); }
   };
 
@@ -55,10 +65,6 @@ export default function AdminPage() {
       setSelectedParent(null);
       fetchFolders();
     } catch (e) { console.error(e); }
-  };
-
-  const deleteFolder = async (id: string) => {
-    // Basic delete logic would go here
   };
 
   if (!isLoggedIn) {
@@ -111,6 +117,7 @@ export default function AdminPage() {
       </div>
       
       <div className="flex-1 flex overflow-hidden">
+        {/* Admin Sidebar */}
         <div className="w-64 border-r border-[#333333] bg-[#252526] p-4">
            <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-6">Management</h2>
            <nav className="space-y-2">
@@ -129,12 +136,30 @@ export default function AdminPage() {
            </nav>
         </div>
 
+        {/* Admin Content */}
         <div className="flex-1 p-8 overflow-y-auto">
            {activeTab === "inbox" ? (
              <>
                <h2 className="text-2xl font-bold mb-8 text-[#9cdcfe]">Recent Messages</h2>
-               <div className="space-y-4 text-gray-500 italic">
-                  // No messages found in SQLite (dev.db)...
+               <div className="space-y-4">
+                  {messages.length === 0 ? (
+                    <p className="text-gray-500 italic">// No messages found in SQLite (dev.db)...</p>
+                  ) : (
+                    messages.map(msg => (
+                      <div key={msg.id} className="bg-[#252526] border border-[#333333] p-6 rounded-lg shadow-md animate-in slide-in-from-left duration-300">
+                         <div className="flex justify-between items-start mb-4">
+                            <div>
+                               <h3 className="text-[#9cdcfe] font-bold text-lg">{msg.name}</h3>
+                               <p className="text-[#ce9178] text-xs">{msg.email}</p>
+                            </div>
+                            <span className="text-[10px] text-gray-500">{new Date(msg.createdAt).toLocaleString()}</span>
+                         </div>
+                         <div className="p-4 bg-[#1e1e1e] border border-[#333333] rounded text-sm text-gray-300 whitespace-pre-wrap">
+                            {msg.message}
+                         </div>
+                      </div>
+                    ))
+                  )}
                </div>
              </>
            ) : (
@@ -177,7 +202,6 @@ export default function AdminPage() {
                           <Plus 
                             onClick={() => setSelectedParent({id: folder.id, name: folder.name})}
                             className="w-4 h-4 text-gray-500 hover:text-green-400 cursor-pointer transition-all" 
-                            title="Add subfolder"
                           />
                           <Trash2 className="w-4 h-4 text-red-500 opacity-0 group-hover:opacity-100 cursor-pointer hover:text-red-400 transition-all" />
                         </div>
