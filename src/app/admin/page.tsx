@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Lock, Mail, FolderPlus, LogOut, Plus, Trash2, Folder as FolderIcon, ChevronRight } from "lucide-react";
+import { Lock, Mail, FolderPlus, LogOut, Plus, Trash2, Folder as FolderIcon, ChevronRight, PenSquare, Save, FileText } from "lucide-react";
 
 interface Folder {
   id: string;
@@ -9,9 +9,17 @@ interface Folder {
   children?: Folder[];
 }
 
+interface Post {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  folderId: string;
+}
+
 export default function AdminPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [activeTab, setActiveTab] = useState<"inbox" | "folders">("inbox");
+  const [activeTab, setActiveTab] = useState<"inbox" | "folders" | "editor">("inbox");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [folders, setFolders] = useState<Folder[]>([]);
@@ -20,8 +28,12 @@ export default function AdminPage() {
   const [selectedParent, setSelectedParent] = useState<{id: string, name: string} | null>(null);
   const [error, setError] = useState("");
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Editor State
+  const [currentPost, setCurrentPost] = useState<Partial<Post>>({ title: "", slug: "", content: "", folderId: "" });
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+
+  const handleLogin = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     const res = await fetch("/api/admin/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -54,14 +66,10 @@ export default function AdminPage() {
   };
 
   const deleteMessage = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this message?")) return;
+    if (!confirm("Are you sure?")) return;
     try {
-      const res = await fetch(`/api/admin/messages?id=${id}`, {
-        method: "DELETE",
-      });
-      if (res.ok) {
-        fetchMessages();
-      }
+      const res = await fetch(`/api/admin/messages?id=${id}`, { method: "DELETE" });
+      if (res.ok) fetchMessages();
     } catch (e) { console.error(e); }
   };
 
@@ -77,6 +85,25 @@ export default function AdminPage() {
       setSelectedParent(null);
       fetchFolders();
     } catch (e) { console.error(e); }
+  };
+
+  const savePost = async () => {
+    if (!currentPost.title || !currentPost.folderId) return;
+    setSaveStatus("saving");
+    try {
+      const res = await fetch("/api/admin/posts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...currentPost,
+          slug: currentPost.slug || currentPost.title?.toLowerCase().replace(/ /g, "-")
+        }),
+      });
+      if (res.ok) {
+        setSaveStatus("saved");
+        setTimeout(() => setSaveStatus("idle"), 2000);
+      }
+    } catch (e) { console.error(e); setSaveStatus("idle"); }
   };
 
   if (!isLoggedIn) {
@@ -107,7 +134,7 @@ export default function AdminPage() {
               />
             </div>
             {error && <p className="text-red-400 text-xs">{error}</p>}
-            <button className="w-full bg-[#007acc] hover:bg-[#0062a3] text-white py-3 font-bold transition-all">
+            <button type="submit" className="w-full bg-[#007acc] hover:bg-[#0062a3] text-white py-3 font-bold transition-all">
               AUTHENTICATE
             </button>
           </form>
@@ -118,10 +145,10 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-[#1e1e1e] text-[#d4d4d4] font-mono flex flex-col">
-      <div className="h-12 bg-[#323233] border-b border-[#111] flex items-center px-6">
+      <div className="h-12 bg-[#323233] border-b border-[#111] flex items-center px-6 shrink-0">
         <div className="flex items-center space-x-3">
           <div className="w-3 h-3 rounded-full bg-[#27c93f]" />
-          <span className="text-sm font-bold">Admin Dashboard</span>
+          <span className="text-sm font-bold tracking-tight">Wowbagger CMS v1.0</span>
         </div>
         <button onClick={() => setIsLoggedIn(false)} className="ml-auto text-xs text-gray-500 hover:text-white flex items-center">
           <LogOut className="w-3 h-3 mr-2" /> EXIT
@@ -129,10 +156,10 @@ export default function AdminPage() {
       </div>
       
       <div className="flex-1 flex overflow-hidden">
-        {/* Admin Sidebar */}
-        <div className="w-64 border-r border-[#333333] bg-[#252526] p-4">
-           <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-6">Management</h2>
-           <nav className="space-y-2">
+        {/* Sidebar */}
+        <div className="w-64 border-r border-[#333333] bg-[#252526] p-4 flex flex-col shrink-0">
+           <h2 className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mb-6">Management</h2>
+           <nav className="space-y-1 flex-1">
               <div 
                 onClick={() => setActiveTab("inbox")}
                 className={`flex items-center p-2 rounded text-sm cursor-pointer transition-colors ${activeTab === 'inbox' ? 'bg-[#37373d] text-white' : 'hover:bg-[#2a2d2e] opacity-60'}`}
@@ -143,104 +170,115 @@ export default function AdminPage() {
                 onClick={() => setActiveTab("folders")}
                 className={`flex items-center p-2 rounded text-sm cursor-pointer transition-colors ${activeTab === 'folders' ? 'bg-[#37373d] text-white' : 'hover:bg-[#2a2d2e] opacity-60'}`}
               >
-                <FolderPlus className="w-4 h-4 mr-3 text-orange-400" /> Blog Folders
+                <FolderPlus className="w-4 h-4 mr-3 text-orange-400" /> Structure
+              </div>
+              <div 
+                onClick={() => setActiveTab("editor")}
+                className={`flex items-center p-2 rounded text-sm cursor-pointer transition-colors ${activeTab === 'editor' ? 'bg-[#37373d] text-white' : 'hover:bg-[#2a2d2e] opacity-60'}`}
+              >
+                <PenSquare className="w-4 h-4 mr-3 text-green-400" /> New Post
               </div>
            </nav>
         </div>
 
-        {/* Admin Content */}
+        {/* Content */}
         <div className="flex-1 p-8 overflow-y-auto">
-           {activeTab === "inbox" ? (
+           {activeTab === "inbox" && (
              <>
-               <h2 className="text-2xl font-bold mb-8 text-[#9cdcfe]">Recent Messages</h2>
+               <h2 className="text-2xl font-bold mb-8 text-[#9cdcfe]">Incoming Transmissions</h2>
                <div className="space-y-4">
-                  {messages.length === 0 ? (
-                    <p className="text-gray-500 italic">// No messages found in SQLite (dev.db)...</p>
-                  ) : (
-                    messages.map(msg => (
-                      <div key={msg.id} className="bg-[#252526] border border-[#333333] p-6 rounded-lg shadow-md animate-in slide-in-from-left duration-300 group/msg">
-                         <div className="flex justify-between items-start mb-4">
-                            <div>
-                               <h3 className="text-[#9cdcfe] font-bold text-lg">{msg.name}</h3>
-                               <p className="text-[#ce9178] text-xs">{msg.email}</p>
-                            </div>
-                            <div className="flex items-center space-x-4">
-                                <span className="text-[10px] text-gray-500">{new Date(msg.createdAt).toLocaleString()}</span>
-                                <button 
-                                  onClick={() => deleteMessage(msg.id)}
-                                  className="text-gray-500 hover:text-red-500 transition-colors opacity-0 group-hover/msg:opacity-100"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
-                            </div>
-                         </div>
-                         <div className="p-4 bg-[#1e1e1e] border border-[#333333] rounded text-sm text-gray-300 whitespace-pre-wrap">
-                            {msg.message}
-                         </div>
-                      </div>
-                    ))
-                  )}
+                  {messages.length === 0 ? <p className="text-gray-500 italic">// No messages detected.</p> : messages.map(msg => (
+                    <div key={msg.id} className="bg-[#252526] border border-[#333333] p-6 rounded group relative">
+                       <button onClick={() => deleteMessage(msg.id)} className="absolute top-4 right-4 text-gray-600 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
+                          <Trash2 className="w-4 h-4" />
+                       </button>
+                       <div className="mb-4">
+                          <h3 className="text-[#9cdcfe] font-bold">{msg.name}</h3>
+                          <p className="text-[#ce9178] text-xs">{msg.email} • {new Date(msg.createdAt).toLocaleDateString()}</p>
+                       </div>
+                       <div className="text-sm text-gray-300 leading-relaxed whitespace-pre-wrap">{msg.message}</div>
+                    </div>
+                  ))}
                </div>
              </>
-           ) : (
-             <>
-               <h2 className="text-2xl font-bold mb-8 text-[#9cdcfe]">Blog Structure</h2>
-               
-               <div className="mb-8 p-4 bg-[#252526] border border-[#333333] rounded">
-                 <div className="flex flex-col space-y-3">
-                   {selectedParent && (
-                     <div className="text-xs text-[#007acc] flex items-center">
-                       <ChevronRight className="w-3 h-3 mr-1" />
-                       Adding subfolder to: <span className="font-bold ml-1 uppercase">{selectedParent.name}</span>
-                       <button onClick={() => setSelectedParent(null)} className="ml-3 text-gray-500 hover:text-white underline">cancel</button>
-                     </div>
-                   )}
-                   <div className="flex space-x-2">
-                     <input 
-                        className="bg-[#1e1e1e] border border-[#333333] p-2 text-sm outline-none focus:border-[#007acc] flex-1"
-                        placeholder={selectedParent ? "New subfolder name..." : "New root folder name..."}
-                        value={newFolderName}
-                        onChange={e => setNewFolderName(e.target.value)}
-                     />
-                     <button 
-                        onClick={createFolder}
-                        className="bg-[#007acc] hover:bg-[#0062a3] text-white px-4 py-2 text-sm flex items-center transition-colors"
-                     >
-                       <Plus className="w-4 h-4 mr-2" /> {selectedParent ? "Add Subfolder" : "Add Root"}
-                     </button>
-                   </div>
-                 </div>
-               </div>
+           )}
 
+           {activeTab === "folders" && (
+             <>
+               <h2 className="text-2xl font-bold mb-8 text-[#9cdcfe]">File System</h2>
+               <div className="mb-8 p-4 bg-[#252526] border border-[#333333] rounded">
+                  <div className="flex flex-col space-y-3">
+                    {selectedParent && <div className="text-[10px] text-[#007acc] flex items-center"><ChevronRight className="w-3 h-3 mr-1" /> Target: <span className="font-bold ml-1">{selectedParent.name}</span><button onClick={() => setSelectedParent(null)} className="ml-2 underline">cancel</button></div>}
+                    <div className="flex space-x-2">
+                      <input className="bg-[#1e1e1e] border border-[#333333] p-2 text-sm outline-none focus:border-[#007acc] flex-1" placeholder="Folder name..." value={newFolderName} onChange={e => setNewFolderName(e.target.value)} />
+                      <button onClick={createFolder} className="bg-[#007acc] hover:bg-[#0062a3] text-white px-4 text-sm flex items-center"><Plus className="w-4 h-4 mr-2" /> {selectedParent ? 'Sub' : 'Root'}</button>
+                    </div>
+                  </div>
+               </div>
                <div className="space-y-2">
-                 {folders.map(folder => (
-                   <div key={folder.id} className={`bg-[#252526] border p-4 rounded group transition-colors ${selectedParent?.id === folder.id ? 'border-[#007acc]' : 'border-[#333333]'}`}>
+                 {folders.map(f => (
+                   <div key={f.id} className={`bg-[#252526] border p-4 rounded ${selectedParent?.id === f.id ? 'border-[#007acc]' : 'border-[#333333]'}`}>
                       <div className="flex items-center">
                         <FolderIcon className="w-4 h-4 mr-3 text-blue-400" />
-                        <span className="font-bold">{folder.name}</span>
-                        <div className="ml-auto flex items-center space-x-4">
-                          <Plus 
-                            onClick={() => setSelectedParent({id: folder.id, name: folder.name})}
-                            className="w-4 h-4 text-gray-500 hover:text-green-400 cursor-pointer transition-all" 
-                          />
-                          <Trash2 className="w-4 h-4 text-red-500 opacity-0 group-hover:opacity-100 cursor-pointer hover:text-red-400 transition-all" />
-                        </div>
+                        <span className="font-bold text-sm">{f.name}</span>
+                        <Plus onClick={() => setSelectedParent({id: f.id, name: f.name})} className="ml-auto w-4 h-4 text-gray-500 hover:text-green-400 cursor-pointer" />
                       </div>
-                      {folder.children && folder.children.length > 0 && (
-                        <div className="ml-6 mt-4 border-l border-[#333333] pl-4 space-y-3">
-                          {folder.children.map(child => (
-                            <div key={child.id} className="text-sm flex items-center group/sub">
-                              <ChevronRight className="w-3 h-3 mr-2 opacity-30" />
-                              <span className="opacity-80">{child.name}</span>
-                              <Trash2 className="w-3 h-3 ml-auto text-red-500 opacity-0 group-hover/sub:opacity-100 cursor-pointer transition-all" />
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                      {f.children?.map(c => <div key={c.id} className="ml-6 mt-2 text-xs opacity-60 flex items-center"><ChevronRight className="w-3 h-3 mr-2" />{c.name}</div>)}
                    </div>
                  ))}
                </div>
              </>
+           )}
+
+           {activeTab === "editor" && (
+             <div className="h-full flex flex-col space-y-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-2xl font-bold text-[#9cdcfe]">Draft Article</h2>
+                  <button 
+                    onClick={savePost} 
+                    disabled={saveStatus !== "idle"}
+                    className="bg-[#007acc] hover:bg-[#0062a3] text-white px-6 py-2 rounded text-sm flex items-center space-x-2 transition-all disabled:opacity-50"
+                  >
+                    <Save className="w-4 h-4" />
+                    <span>{saveStatus === "saving" ? "Compiling..." : saveStatus === "saved" ? "Success" : "Save to DB"}</span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase text-gray-500 tracking-widest">Article Title</label>
+                    <input 
+                      className="w-full bg-[#252526] border border-[#333333] p-3 text-white outline-none focus:border-[#007acc]"
+                      placeholder="The Rise of the Machines..."
+                      value={currentPost.title}
+                      onChange={e => setCurrentPost({...currentPost, title: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] uppercase text-gray-500 tracking-widest">Target Folder</label>
+                    <select 
+                      className="w-full bg-[#252526] border border-[#333333] p-3 text-white outline-none focus:border-[#007acc] appearance-none"
+                      value={currentPost.folderId}
+                      onChange={e => setCurrentPost({...currentPost, folderId: e.target.value})}
+                    >
+                      <option value="">Select Folder...</option>
+                      {folders.flatMap(f => [f, ...(f.children || [])]).map(f => (
+                        <option key={f.id} value={f.id}>{f.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="flex-1 space-y-2 flex flex-col min-h-0">
+                  <label className="text-[10px] uppercase text-gray-500 tracking-widest">Content (Markdown)</label>
+                  <textarea 
+                    className="flex-1 w-full bg-[#252526] border border-[#333333] p-6 text-white outline-none focus:border-[#007acc] resize-none font-mono text-sm leading-relaxed"
+                    placeholder="# Hello World..."
+                    value={currentPost.content}
+                    onChange={e => setCurrentPost({...currentPost, content: e.target.value})}
+                  />
+                </div>
+             </div>
            )}
         </div>
       </div>
