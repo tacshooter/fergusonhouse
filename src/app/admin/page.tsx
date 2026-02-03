@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Lock, Mail, FolderPlus, LogOut, Plus, Trash2, Folder as FolderIcon } from "lucide-react";
+import { Lock, Mail, FolderPlus, LogOut, Plus, Trash2, Folder as FolderIcon, ChevronRight } from "lucide-react";
 
 interface Folder {
   id: string;
@@ -16,6 +16,7 @@ export default function AdminPage() {
   const [password, setPassword] = useState("");
   const [folders, setFolders] = useState<Folder[]>([]);
   const [newFolderName, setNewFolderName] = useState("");
+  const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -51,6 +52,7 @@ export default function AdminPage() {
         body: JSON.stringify({ name: newFolderName, parentId }),
       });
       setNewFolderName("");
+      setSelectedParentId(null);
       fetchFolders();
     } catch (e) { console.error(e); }
   };
@@ -140,31 +142,47 @@ export default function AdminPage() {
                <div className="mb-8 flex space-x-2">
                  <input 
                     className="bg-[#252526] border border-[#333333] p-2 text-sm outline-none focus:border-[#007acc] w-64"
-                    placeholder="New root folder name..."
+                    placeholder={selectedParentId ? "New subfolder name..." : "New root folder name..."}
                     value={newFolderName}
                     onChange={e => setNewFolderName(e.target.value)}
                  />
                  <button 
-                    onClick={() => createFolder(null)}
-                    className="bg-[#007acc] hover:bg-[#0062a3] text-white px-4 py-2 text-sm flex items-center"
+                    onClick={() => createFolder(selectedParentId)}
+                    className="bg-[#007acc] hover:bg-[#0062a3] text-white px-4 py-2 text-sm flex items-center transition-colors"
                  >
-                   <Plus className="w-4 h-4 mr-2" /> Add Root
+                   <Plus className="w-4 h-4 mr-2" /> {selectedParentId ? "Add Subfolder" : "Add Root"}
                  </button>
+                 {selectedParentId && (
+                   <button 
+                     onClick={() => { setSelectedParentId(null); setNewFolderName(""); }}
+                     className="text-xs text-gray-500 hover:text-white"
+                   >
+                     Cancel
+                   </button>
+                 )}
                </div>
 
                <div className="space-y-2">
                  {folders.map(folder => (
-                   <div key={folder.id} className="bg-[#252526] border border-[#333333] p-4 rounded group">
+                   <div key={folder.id} className={`bg-[#252526] border p-4 rounded group transition-colors ${selectedParentId === folder.id ? 'border-[#007acc]' : 'border-[#333333]'}`}>
                       <div className="flex items-center">
                         <FolderIcon className="w-4 h-4 mr-3 text-blue-400" />
                         <span className="font-bold">{folder.name}</span>
-                        <Trash2 className="w-4 h-4 ml-auto text-red-500 opacity-0 group-hover:opacity-100 cursor-pointer hover:text-red-400 transition-all" />
+                        <div className="ml-auto flex items-center space-x-3">
+                          <Plus 
+                            onClick={() => setSelectedParentId(folder.id)}
+                            className="w-4 h-4 text-gray-500 hover:text-green-400 cursor-pointer transition-all" 
+                          />
+                          <Trash2 className="w-4 h-4 text-red-500 opacity-0 group-hover:opacity-100 cursor-pointer hover:text-red-400 transition-all" />
+                        </div>
                       </div>
                       {folder.children && folder.children.length > 0 && (
-                        <div className="ml-6 mt-2 border-l border-[#333333] pl-4 space-y-1">
+                        <div className="ml-6 mt-4 border-l border-[#333333] pl-4 space-y-3">
                           {folder.children.map(child => (
-                            <div key={child.id} className="text-sm opacity-70 flex items-center">
-                              <span className="mr-2 opacity-40">—</span> {child.name}
+                            <div key={child.id} className="text-sm flex items-center group/sub">
+                              <ChevronRight className="w-3 h-3 mr-2 opacity-30" />
+                              <span className="opacity-80">{child.name}</span>
+                              <Trash2 className="w-3 h-3 ml-auto text-red-500 opacity-0 group-hover/sub:opacity-100 cursor-pointer transition-all" />
                             </div>
                           ))}
                         </div>
