@@ -16,7 +16,7 @@ export default function AdminPage() {
   const [password, setPassword] = useState("");
   const [folders, setFolders] = useState<Folder[]>([]);
   const [newFolderName, setNewFolderName] = useState("");
-  const [selectedParentId, setSelectedParentId] = useState<string | null>(null);
+  const [selectedParent, setSelectedParent] = useState<{id: string, name: string} | null>(null);
   const [error, setError] = useState("");
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -43,18 +43,22 @@ export default function AdminPage() {
     } catch (e) { console.error(e); }
   };
 
-  const createFolder = async (parentId: string | null = null) => {
+  const createFolder = async () => {
     if (!newFolderName) return;
     try {
       await fetch("/api/admin/folders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newFolderName, parentId }),
+        body: JSON.stringify({ name: newFolderName, parentId: selectedParent?.id || null }),
       });
       setNewFolderName("");
-      setSelectedParentId(null);
+      setSelectedParent(null);
       fetchFolders();
     } catch (e) { console.error(e); }
+  };
+
+  const deleteFolder = async (id: string) => {
+    // Basic delete logic would go here
   };
 
   if (!isLoggedIn) {
@@ -107,7 +111,6 @@ export default function AdminPage() {
       </div>
       
       <div className="flex-1 flex overflow-hidden">
-        {/* Admin Sidebar */}
         <div className="w-64 border-r border-[#333333] bg-[#252526] p-4">
            <h2 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-6">Management</h2>
            <nav className="space-y-2">
@@ -126,7 +129,6 @@ export default function AdminPage() {
            </nav>
         </div>
 
-        {/* Admin Content */}
         <div className="flex-1 p-8 overflow-y-auto">
            {activeTab === "inbox" ? (
              <>
@@ -139,39 +141,43 @@ export default function AdminPage() {
              <>
                <h2 className="text-2xl font-bold mb-8 text-[#9cdcfe]">Blog Structure</h2>
                
-               <div className="mb-8 flex space-x-2">
-                 <input 
-                    className="bg-[#252526] border border-[#333333] p-2 text-sm outline-none focus:border-[#007acc] w-64"
-                    placeholder={selectedParentId ? "New subfolder name..." : "New root folder name..."}
-                    value={newFolderName}
-                    onChange={e => setNewFolderName(e.target.value)}
-                 />
-                 <button 
-                    onClick={() => createFolder(selectedParentId)}
-                    className="bg-[#007acc] hover:bg-[#0062a3] text-white px-4 py-2 text-sm flex items-center transition-colors"
-                 >
-                   <Plus className="w-4 h-4 mr-2" /> {selectedParentId ? "Add Subfolder" : "Add Root"}
-                 </button>
-                 {selectedParentId && (
-                   <button 
-                     onClick={() => { setSelectedParentId(null); setNewFolderName(""); }}
-                     className="text-xs text-gray-500 hover:text-white"
-                   >
-                     Cancel
-                   </button>
-                 )}
+               <div className="mb-8 p-4 bg-[#252526] border border-[#333333] rounded">
+                 <div className="flex flex-col space-y-3">
+                   {selectedParent && (
+                     <div className="text-xs text-[#007acc] flex items-center">
+                       <ChevronRight className="w-3 h-3 mr-1" />
+                       Adding subfolder to: <span className="font-bold ml-1 uppercase">{selectedParent.name}</span>
+                       <button onClick={() => setSelectedParent(null)} className="ml-3 text-gray-500 hover:text-white underline">cancel</button>
+                     </div>
+                   )}
+                   <div className="flex space-x-2">
+                     <input 
+                        className="bg-[#1e1e1e] border border-[#333333] p-2 text-sm outline-none focus:border-[#007acc] flex-1"
+                        placeholder={selectedParent ? "New subfolder name..." : "New root folder name..."}
+                        value={newFolderName}
+                        onChange={e => setNewFolderName(e.target.value)}
+                     />
+                     <button 
+                        onClick={createFolder}
+                        className="bg-[#007acc] hover:bg-[#0062a3] text-white px-4 py-2 text-sm flex items-center transition-colors"
+                     >
+                       <Plus className="w-4 h-4 mr-2" /> {selectedParent ? "Add Subfolder" : "Add Root"}
+                     </button>
+                   </div>
+                 </div>
                </div>
 
                <div className="space-y-2">
                  {folders.map(folder => (
-                   <div key={folder.id} className={`bg-[#252526] border p-4 rounded group transition-colors ${selectedParentId === folder.id ? 'border-[#007acc]' : 'border-[#333333]'}`}>
+                   <div key={folder.id} className={`bg-[#252526] border p-4 rounded group transition-colors ${selectedParent?.id === folder.id ? 'border-[#007acc]' : 'border-[#333333]'}`}>
                       <div className="flex items-center">
                         <FolderIcon className="w-4 h-4 mr-3 text-blue-400" />
                         <span className="font-bold">{folder.name}</span>
-                        <div className="ml-auto flex items-center space-x-3">
+                        <div className="ml-auto flex items-center space-x-4">
                           <Plus 
-                            onClick={() => setSelectedParentId(folder.id)}
+                            onClick={() => setSelectedParent({id: folder.id, name: folder.name})}
                             className="w-4 h-4 text-gray-500 hover:text-green-400 cursor-pointer transition-all" 
+                            title="Add subfolder"
                           />
                           <Trash2 className="w-4 h-4 text-red-500 opacity-0 group-hover:opacity-100 cursor-pointer hover:text-red-400 transition-all" />
                         </div>
