@@ -1,6 +1,13 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-sidebar: hsl(var(--sidebar));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-editor-bg: hsl(var(--editor-bg));
+  --color-editor-fg: hsl(var(--editor-fg));
+}
 
 @layer base {
   :root {
@@ -23,5 +30,6 @@
 }
 
 body {
-  @apply bg-background text-foreground;
+  background-color: var(--background);
+  color: var(--foreground);
 }
