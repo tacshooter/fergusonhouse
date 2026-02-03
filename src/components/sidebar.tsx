@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Folder, FileText, ChevronRight, ChevronDown, User, Briefcase, Mail, Cpu } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -10,64 +10,73 @@ function cn(...inputs: ClassValue[]) {
 }
 
 interface FileItem {
+  id?: string;
   name: string;
   type: "file" | "folder";
   icon?: React.ReactNode;
   children?: FileItem[];
 }
 
-const navItems: FileItem[] = [
-  {
-    name: "blog",
-    type: "folder",
-    children: [
-      { 
-        name: "projects", 
-        type: "folder",
-        children: [{ name: "initial-commit.md", type: "file" }]
-      },
-      { 
-        name: "conventions", 
-        type: "folder",
-        children: [{ name: "recap-2025.md", type: "file" }]
-      },
-      { 
-        name: "automated-code-gen", 
-        type: "folder",
-        children: [{ name: "rise-of-the-agents.md", type: "file" }]
-      },
-    ],
-  },
-  {
-    name: "services.ts",
-    type: "file",
-    icon: <Briefcase className="w-4 h-4 text-blue-400" />,
-  },
-  {
-    name: "about.me",
-    type: "file",
-    icon: <User className="w-4 h-4 text-orange-400" />,
-  },
-  {
-    name: "contact.json",
-    type: "file",
-    icon: <Mail className="w-4 h-4 text-yellow-400" />,
-  },
-  {
-    name: "wowbagger.sh",
-    type: "file",
-    icon: <Cpu className="w-4 h-4 text-green-400" />,
-  },
-];
-
 export function Sidebar({ activeFile, onFileSelect }: { activeFile: string; onFileSelect: (name: string) => void }) {
+  const [items, setItems] = useState<FileItem[]>([]);
+
+  useEffect(() => {
+    const fetchFolders = async () => {
+      try {
+        const res = await fetch("/api/admin/folders");
+        const folders = await res.json();
+        
+        const dynamicItems: FileItem[] = folders.map((f: any) => ({
+          id: f.id,
+          name: f.name,
+          type: "folder",
+          children: f.children?.map((c: any) => ({
+            id: c.id,
+            name: c.name,
+            type: "folder", // For now, everything in DB is a folder
+            children: []
+          })) || []
+        }));
+
+        // Merge with static "system" files
+        setItems([
+          ...dynamicItems,
+          {
+            name: "services.ts",
+            type: "file",
+            icon: <Briefcase className="w-4 h-4 text-blue-400" />,
+          },
+          {
+            name: "about.me",
+            type: "file",
+            icon: <User className="w-4 h-4 text-orange-400" />,
+          },
+          {
+            name: "contact.json",
+            type: "file",
+            icon: <Mail className="w-4 h-4 text-yellow-400" />,
+          },
+          {
+            name: "wowbagger.sh",
+            type: "file",
+            icon: <Cpu className="w-4 h-4 text-green-400" />,
+          },
+        ]);
+      } catch (e) {
+        console.error("Failed to load sidebar:", e);
+      }
+    };
+
+    fetchFolders();
+  }, []);
+
   return (
     <div className="w-64 h-full bg-[#252526] text-[#cccccc] flex flex-col border-r border-[#333333] select-none flex-shrink-0">
       <div className="p-3 text-[11px] uppercase tracking-wider font-bold opacity-70">
         Explorer: FergusonHouse
       </div>
       <div className="flex-1 overflow-y-auto px-2">
-        {navItems.map((item) => (
+        {items.map((item) => (
           <SidebarItem key={item.name} item={item} depth={0} activeFile={activeFile} onFileSelect={onFileSelect} />
         ))}
       </div>
