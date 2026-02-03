@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { X, Play, Send, CheckCircle2 } from "lucide-react";
+import { X, Play, Send, CheckCircle2, AlertTriangle } from "lucide-react";
 
 const CONTENT: Record<string, { title: string; subtitle: string; body: string; language: string }> = {
   "about.me": {
@@ -51,11 +51,31 @@ const CONTENT: Record<string, { title: string; subtitle: string; body: string; l
 export function Editor({ activeFile }: { activeFile: string }) {
   const [isRunning, setIsRunning] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "", message: "" });
-  const [status, setStatus] = useState<"idle" | "sending" | "success">("idle");
+  const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
 
   const fileData = CONTENT[activeFile] || CONTENT["about.me"];
 
+  const validate = () => {
+    if (!formData.name || !formData.email || !formData.message) {
+      setErrorMsg("Error: All fields are mandatory.");
+      return false;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setErrorMsg("Error: Invalid email format detected.");
+      return false;
+    }
+    return true;
+  };
+
   const handleRun = async () => {
+    setErrorMsg("");
+    if (!validate()) {
+      setStatus("error");
+      return;
+    }
+
     setStatus("sending");
     try {
       const res = await fetch("/api/contact", {
@@ -63,6 +83,8 @@ export function Editor({ activeFile }: { activeFile: string }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
+      const data = await res.json();
+      
       if (res.ok) {
         setStatus("success");
         setTimeout(() => {
@@ -70,10 +92,14 @@ export function Editor({ activeFile }: { activeFile: string }) {
           setStatus("idle");
           setFormData({ name: "", email: "", message: "" });
         }, 2000);
+      } else {
+        setErrorMsg(data.error || "Execution failed.");
+        setStatus("error");
       }
     } catch (e) {
       console.error(e);
-      setStatus("idle");
+      setErrorMsg("Network error: Host unreachable.");
+      setStatus("error");
     }
   };
 
@@ -101,10 +127,10 @@ export function Editor({ activeFile }: { activeFile: string }) {
       <div className="flex-1 p-8 overflow-y-auto font-mono text-sm leading-relaxed">
         <div className="max-w-3xl mx-auto relative">
           {isRunning && activeFile === "contact.json" ? (
-            <div className="bg-[#252526] border border-[#333333] rounded-lg p-6 animate-in fade-in zoom-in duration-200">
+            <div className="bg-[#252526] border border-[#333333] rounded-lg p-6 animate-in fade-in zoom-in duration-200 shadow-xl">
               <div className="flex items-center justify-between mb-6">
                 <span className="text-[#9cdcfe]">bash contact.json --execute</span>
-                <button onClick={() => setIsRunning(false)} className="text-gray-500 hover:text-white"><X className="w-4 h-4"/></button>
+                <button onClick={() => { setIsRunning(false); setStatus("idle"); setErrorMsg(""); }} className="text-gray-500 hover:text-white"><X className="w-4 h-4"/></button>
               </div>
               
               {status === "success" ? (
@@ -115,6 +141,12 @@ export function Editor({ activeFile }: { activeFile: string }) {
                 </div>
               ) : (
                 <div className="space-y-4">
+                  {status === "error" && (
+                    <div className="p-3 bg-red-900/30 border border-red-500/50 text-red-400 text-xs flex items-center space-x-2 mb-2">
+                       <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                       <span>{errorMsg}</span>
+                    </div>
+                  )}
                   <div>
                     <label className="text-gray-500 block mb-1">Name:</label>
                     <input 

@@ -12,3 +12,23 @@ export async function GET() {
     return NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 });
   }
 }
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ error: 'Missing message ID' }, { status: 400 });
+    }
+
+    await prisma.contactMessage.delete({
+      where: { id }
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Delete Message Error:", error);
+    return NextResponse.json({ error: 'Failed to delete message' }, { status: 500 });
+  }
+}

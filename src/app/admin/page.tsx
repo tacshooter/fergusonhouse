@@ -53,6 +53,18 @@ export default function AdminPage() {
     } catch (e) { console.error(e); }
   };
 
+  const deleteMessage = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this message?")) return;
+    try {
+      const res = await fetch(`/api/admin/messages?id=${id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        fetchMessages();
+      }
+    } catch (e) { console.error(e); }
+  };
+
   const createFolder = async () => {
     if (!newFolderName) return;
     try {
@@ -146,13 +158,21 @@ export default function AdminPage() {
                     <p className="text-gray-500 italic">// No messages found in SQLite (dev.db)...</p>
                   ) : (
                     messages.map(msg => (
-                      <div key={msg.id} className="bg-[#252526] border border-[#333333] p-6 rounded-lg shadow-md animate-in slide-in-from-left duration-300">
+                      <div key={msg.id} className="bg-[#252526] border border-[#333333] p-6 rounded-lg shadow-md animate-in slide-in-from-left duration-300 group/msg">
                          <div className="flex justify-between items-start mb-4">
                             <div>
                                <h3 className="text-[#9cdcfe] font-bold text-lg">{msg.name}</h3>
                                <p className="text-[#ce9178] text-xs">{msg.email}</p>
                             </div>
-                            <span className="text-[10px] text-gray-500">{new Date(msg.createdAt).toLocaleString()}</span>
+                            <div className="flex items-center space-x-4">
+                                <span className="text-[10px] text-gray-500">{new Date(msg.createdAt).toLocaleString()}</span>
+                                <button 
+                                  onClick={() => deleteMessage(msg.id)}
+                                  className="text-gray-500 hover:text-red-500 transition-colors opacity-0 group-hover/msg:opacity-100"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                            </div>
                          </div>
                          <div className="p-4 bg-[#1e1e1e] border border-[#333333] rounded text-sm text-gray-300 whitespace-pre-wrap">
                             {msg.message}
