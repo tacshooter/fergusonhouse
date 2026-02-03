@@ -88,22 +88,34 @@ export default function AdminPage() {
   };
 
   const savePost = async () => {
-    if (!currentPost.title || !currentPost.folderId) return;
+    if (!currentPost.title || !currentPost.folderId) {
+      alert("Missing Title or Folder Selection.");
+      return;
+    }
     setSaveStatus("saving");
     try {
+      const payload = {
+        ...currentPost,
+        slug: currentPost.slug || currentPost.title?.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, '')
+      };
       const res = await fetch("/api/admin/posts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...currentPost,
-          slug: currentPost.slug || currentPost.title?.toLowerCase().replace(/ /g, "-")
-        }),
+        body: JSON.stringify(payload),
       });
       if (res.ok) {
         setSaveStatus("saved");
         setTimeout(() => setSaveStatus("idle"), 2000);
+      } else {
+        const errorData = await res.json();
+        alert("Error saving: " + (errorData.error || "Unknown error"));
+        setSaveStatus("idle");
       }
-    } catch (e) { console.error(e); setSaveStatus("idle"); }
+    } catch (e) { 
+      console.error(e); 
+      alert("Network error while saving.");
+      setSaveStatus("idle"); 
+    }
   };
 
   if (!isLoggedIn) {

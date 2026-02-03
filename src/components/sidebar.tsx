@@ -15,30 +15,35 @@ interface FileItem {
   type: "file" | "folder";
   icon?: React.ReactNode;
   children?: FileItem[];
+  slug?: string;
 }
 
 export function Sidebar({ activeFile, onFileSelect }: { activeFile: string; onFileSelect: (name: string) => void }) {
   const [items, setItems] = useState<FileItem[]>([]);
 
   useEffect(() => {
-    const fetchFolders = async () => {
+    const fetchHierarchy = async () => {
       try {
         const res = await fetch("/api/admin/folders");
         const folders = await res.json();
         
-        const dynamicItems: FileItem[] = folders.map((f: any) => ({
+        const mapFolder = (f: any): FileItem => ({
           id: f.id,
           name: f.name,
           type: "folder",
-          children: f.children?.map((c: any) => ({
-            id: c.id,
-            name: c.name,
-            type: "folder", // For now, everything in DB is a folder
-            children: []
-          })) || []
-        }));
+          children: [
+            ...(f.children?.map(mapFolder) || []),
+            ...(f.posts?.map((p: any) => ({
+              id: p.id,
+              name: `${p.slug}.md`,
+              type: "file",
+              slug: p.slug
+            })) || [])
+          ]
+        });
 
-        // Merge with static "system" files
+        const dynamicItems: FileItem[] = folders.map(mapFolder);
+
         setItems([
           ...dynamicItems,
           {
@@ -67,8 +72,8 @@ export function Sidebar({ activeFile, onFileSelect }: { activeFile: string; onFi
       }
     };
 
-    fetchFolders();
-  }, []);
+    fetchHierarchy();
+  }, [activeFile]);
 
   return (
     <div className="w-64 h-full bg-[#252526] text-[#cccccc] flex flex-col border-r border-[#333333] select-none flex-shrink-0">

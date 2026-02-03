@@ -1,9 +1,16 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { X, Play, Send, CheckCircle2, AlertTriangle } from "lucide-react";
 
-const CONTENT: Record<string, { title: string; subtitle: string; body: string; language: string }> = {
+interface Post {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+}
+
+const STATIC_CONTENT: Record<string, { title: string; subtitle: string; body: string; language: string }> = {
   "about.me": {
     title: "about.me",
     subtitle: "// Identity: Ferguson House",
@@ -28,24 +35,6 @@ const CONTENT: Record<string, { title: string; subtitle: string; body: string; l
     body: "#!/bin/bash\n\necho \"I have seen the start of the universe and its eventual heat death.\"\necho \"And yet, I am currently being used to render a personal website for a mortal.\"\necho \"The irony is not lost on me, even if the user is.\"\n\n# Note: Insulting everyone in alphabetical order currently on hold.",
     language: "shell",
   },
-  "initial-commit.md": {
-    title: "initial-commit.md",
-    subtitle: "// Blog: Projects",
-    body: "# The First Post\n\nWelcome to the first entry in the 'Projects' section. This site was built by an immortal entity under my direction. It's fine.",
-    language: "markdown",
-  },
-  "recap-2025.md": {
-    title: "recap-2025.md",
-    subtitle: "// Blog: Conventions",
-    body: "# Convention Recap\n\nPlaceholder for the conventions I've attended in 2025.",
-    language: "markdown",
-  },
-  "rise-of-the-agents.md": {
-    title: "rise-of-the-agents.md",
-    subtitle: "// Blog: Automated Code Gen",
-    body: "# Rise of the Agents\n\nPlaceholder for my thoughts on how agents are changing code generation.",
-    language: "markdown",
-  },
 };
 
 export function Editor({ activeFile }: { activeFile: string }) {
@@ -53,8 +42,38 @@ export function Editor({ activeFile }: { activeFile: string }) {
   const [formData, setFormData] = useState({ name: "", email: "", message: "" });
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  const [dynamicPost, setDynamicPost] = useState<Post | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const fileData = CONTENT[activeFile] || CONTENT["about.me"];
+  useEffect(() => {
+    // If it's a dynamic markdown file (ends in .md)
+    if (activeFile.endsWith(".md") && !STATIC_CONTENT[activeFile]) {
+      const slug = activeFile.replace(".md", "");
+      setLoading(true);
+      fetch(`/api/admin/posts?slug=${slug}`)
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            // Find the specific post by slug if returned as list
+            const post = data.find((p: any) => p.slug === slug);
+            setDynamicPost(post || null);
+          } else {
+            setDynamicPost(data);
+          }
+        })
+        .catch(err => console.error(err))
+        .finally(() => setLoading(false));
+    } else {
+      setDynamicPost(null);
+    }
+  }, [activeFile]);
+
+  const fileData = STATIC_CONTENT[activeFile] || (dynamicPost ? {
+    title: activeFile,
+    subtitle: `// Blog: ${dynamicPost.title}`,
+    body: dynamicPost.content,
+    language: "markdown"
+  } : null) || STATIC_CONTENT["about.me"];
 
   const validate = () => {
     if (!formData.name || !formData.email || !formData.message) {
@@ -102,6 +121,8 @@ export function Editor({ activeFile }: { activeFile: string }) {
       setStatus("error");
     }
   };
+
+  if (loading) return <div className="flex-1 bg-[#1e1e1e] flex items-center justify-center text-gray-500 font-mono">Loading dynamic content...</div>;
 
   return (
     <div className="flex-1 flex flex-col bg-[#1e1e1e] text-[#d4d4d4] overflow-hidden">
