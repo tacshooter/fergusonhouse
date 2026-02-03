@@ -21,9 +21,21 @@ const navItems: FileItem[] = [
     name: "blog",
     type: "folder",
     children: [
-      { name: "conventions.md", type: "file" },
-      { name: "projects.md", type: "file" },
-      { name: "people.md", type: "file" },
+      { 
+        name: "projects", 
+        type: "folder",
+        children: [{ name: "initial-commit.md", type: "file" }]
+      },
+      { 
+        name: "conventions", 
+        type: "folder",
+        children: [{ name: "recap-2025.md", type: "file" }]
+      },
+      { 
+        name: "automated-code-gen", 
+        type: "folder",
+        children: [{ name: "rise-of-the-agents.md", type: "file" }]
+      },
     ],
   },
   {
@@ -48,7 +60,7 @@ const navItems: FileItem[] = [
   },
 ];
 
-export function Sidebar() {
+export function Sidebar({ activeFile, onFileSelect }: { activeFile: string; onFileSelect: (name: string) => void }) {
   return (
     <div className="w-64 h-full bg-[#252526] text-[#cccccc] flex flex-col border-r border-[#333333] select-none flex-shrink-0">
       <div className="p-3 text-[11px] uppercase tracking-wider font-bold opacity-70">
@@ -56,24 +68,34 @@ export function Sidebar() {
       </div>
       <div className="flex-1 overflow-y-auto px-2">
         {navItems.map((item) => (
-          <SidebarItem key={item.name} item={item} depth={0} />
+          <SidebarItem key={item.name} item={item} depth={0} activeFile={activeFile} onFileSelect={onFileSelect} />
         ))}
       </div>
     </div>
   );
 }
 
-function SidebarItem({ item, depth }: { item: FileItem; depth: number }) {
+function SidebarItem({ item, depth, activeFile, onFileSelect }: { item: FileItem; depth: number; activeFile: string; onFileSelect: (name: string) => void }) {
   const [isOpen, setIsOpen] = React.useState(true);
+  const isActive = activeFile === item.name;
+
+  const handleClick = () => {
+    if (item.type === "folder") {
+      setIsOpen(!isOpen);
+    } else {
+      onFileSelect(item.name);
+    }
+  };
 
   return (
     <div>
       <div
         className={cn(
           "flex items-center py-1 px-2 hover:bg-[#2a2d2e] cursor-pointer text-sm group",
+          isActive && "bg-[#37373d] text-white",
           depth > 0 && "ml-4"
         )}
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleClick}
       >
         {item.type === "folder" && (
           <span className="mr-1 opacity-60">
@@ -90,7 +112,7 @@ function SidebarItem({ item, depth }: { item: FileItem; depth: number }) {
       {item.type === "folder" && isOpen && item.children && (
         <div>
           {item.children.map((child) => (
-            <SidebarItem key={child.name} item={child} depth={depth + 1} />
+            <SidebarItem key={child.name} item={child} depth={depth + 1} activeFile={activeFile} onFileSelect={onFileSelect} />
           ))}
         </div>
       )}
