@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Lock, Mail, FolderPlus, LogOut, Plus, Trash2, Folder as FolderIcon, ChevronRight, PenSquare, Save, FileText } from "lucide-react";
+import { Lock, Mail, FolderPlus, LogOut, Plus, Trash2, Folder as FolderIcon, ChevronRight, PenSquare, Save, FileText, LayoutList } from "lucide-react";
 
 interface Folder {
   id: string;
@@ -15,14 +15,16 @@ interface Post {
   slug: string;
   content: string;
   folderId: string;
+  createdAt: string;
 }
 
 export default function AdminPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [activeTab, setActiveTab] = useState<"inbox" | "folders" | "editor">("inbox");
+  const [activeTab, setActiveTab] = useState<"inbox" | "folders" | "editor" | "posts">("inbox");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [folders, setFolders] = useState<Folder[]>([]);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [messages, setMessages] = useState<any[]>([]);
   const [newFolderName, setNewFolderName] = useState("");
   const [selectedParent, setSelectedParent] = useState<{id: string, name: string} | null>(null);
@@ -42,11 +44,16 @@ export default function AdminPage() {
 
     if (res.ok) {
       setIsLoggedIn(true);
-      fetchFolders();
-      fetchMessages();
+      refreshData();
     } else {
       setError("Access Denied: Invalid Credentials");
     }
+  };
+
+  const refreshData = () => {
+    fetchFolders();
+    fetchMessages();
+    fetchPosts();
   };
 
   const fetchFolders = async () => {
@@ -54,6 +61,14 @@ export default function AdminPage() {
       const res = await fetch("/api/admin/folders");
       const data = await res.json();
       if (Array.isArray(data)) setFolders(data);
+    } catch (e) { console.error(e); }
+  };
+
+  const fetchPosts = async () => {
+    try {
+      const res = await fetch("/api/admin/posts");
+      const data = await res.json();
+      if (Array.isArray(data)) setPosts(data);
     } catch (e) { console.error(e); }
   };
 
@@ -73,6 +88,14 @@ export default function AdminPage() {
     } catch (e) { console.error(e); }
   };
 
+  const deletePost = async (id: string) => {
+    if (!confirm("Permanently delete this article?")) return;
+    try {
+      const res = await fetch(`/api/admin/posts?id=${id}`, { method: "DELETE" });
+      if (res.ok) fetchPosts();
+    } catch (e) { console.error(e); }
+  };
+
   const createFolder = async () => {
     if (!newFolderName) return;
     try {
@@ -89,33 +112,38 @@ export default function AdminPage() {
 
   const savePost = async () => {
     if (!currentPost.title || !currentPost.folderId) {
-      alert("Missing Title or Folder Selection.");
+      alert("Title and Folder are required.");
       return;
     }
     setSaveStatus("saving");
     try {
-      const payload = {
-        ...currentPost,
-        slug: currentPost.slug || currentPost.title?.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, '')
-      };
       const res = await fetch("/api/admin/posts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          ...currentPost,
+          slug: currentPost.slug || currentPost.title?.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, '')
+        }),
       });
       if (res.ok) {
         setSaveStatus("saved");
-        setTimeout(() => setSaveStatus("idle"), 2000);
-      } else {
-        const errorData = await res.json();
-        alert("Error saving: " + (errorData.error || "Unknown error"));
-        setSaveStatus("idle");
+        setTimeout(() => {
+          setSaveStatus("idle");
+          setActiveTab("posts");
+          fetchPosts();
+        }, 1000);
       }
-    } catch (e) { 
-      console.error(e); 
-      alert("Network error while saving.");
-      setSaveStatus("idle"); 
-    }
+    } catch (e) { console.error(e); setSaveStatus("idle"); }
+  };
+
+  const startEdit = (post: Post) => {
+    setCurrentPost(post);
+    setActiveTab("editor");
+  };
+
+  const startNew = () => {
+    setCurrentPost({ title: "", slug: "", content: "", folderId: "" });
+    setActiveTab("editor");
   };
 
   if (!isLoggedIn) {
@@ -160,7 +188,7 @@ export default function AdminPage() {
       <div className="h-12 bg-[#323233] border-b border-[#111] flex items-center px-6 shrink-0">
         <div className="flex items-center space-x-3">
           <div className="w-3 h-3 rounded-full bg-[#27c93f]" />
-          <span className="text-sm font-bold tracking-tight">Wowbagger CMS v1.0</span>
+          <span className="text-sm font-bold tracking-tight">Wowbagger CMS v1.1</span>
         </div>
         <button onClick={() => setIsLoggedIn(false)} className="ml-auto text-xs text-gray-500 hover:text-white flex items-center">
           <LogOut className="w-3 h-3 mr-2" /> EXIT
@@ -185,8 +213,14 @@ export default function AdminPage() {
                 <FolderPlus className="w-4 h-4 mr-3 text-orange-400" /> Structure
               </div>
               <div 
-                onClick={() => setActiveTab("editor")}
-                className={`flex items-center p-2 rounded text-sm cursor-pointer transition-colors ${activeTab === 'editor' ? 'bg-[#37373d] text-white' : 'hover:bg-[#2a2d2e] opacity-60'}`}
+                onClick={() => setActiveTab("posts")}
+                className={`flex items-center p-2 rounded text-sm cursor-pointer transition-colors ${activeTab === 'posts' ? 'bg-[#37373d] text-white' : 'hover:bg-[#2a2d2e] opacity-60'}`}
+              >
+                <LayoutList className="w-4 h-4 mr-3 text-purple-400" /> All Posts
+              </div>
+              <div 
+                onClick={startNew}
+                className={`flex items-center p-2 rounded text-sm cursor-pointer transition-colors ${activeTab === 'editor' && !currentPost.id ? 'bg-[#37373d] text-white' : 'hover:bg-[#2a2d2e] opacity-60'}`}
               >
                 <PenSquare className="w-4 h-4 mr-3 text-green-400" /> New Post
               </div>
@@ -233,27 +267,55 @@ export default function AdminPage() {
                       <div className="flex items-center">
                         <FolderIcon className="w-4 h-4 mr-3 text-blue-400" />
                         <span className="font-bold text-sm">{f.name}</span>
-                        <Plus onClick={() => setSelectedParent({id: f.id, name: f.name})} className="ml-auto w-4 h-4 text-gray-500 hover:text-green-400 cursor-pointer" />
+                        <Plus onClick={() => setSelectedParent({id: f.id, name: f.name})} className="ml-auto w-4 h-4 text-gray-500 hover:text-green-400 cursor-pointer transition-all" />
                       </div>
-                      {f.children?.map(c => <div key={c.id} className="ml-6 mt-2 text-xs opacity-60 flex items-center"><ChevronRight className="w-3 h-3 mr-2" />{c.name}</div>)}
+                      {f.children?.map(c => <div key={c.id} className="ml-6 mt-2 text-xs opacity-60 flex items-center group/sub">
+                        <ChevronRight className="w-3 h-3 mr-2 opacity-30" />{c.name}
+                      </div>)}
                    </div>
                  ))}
                </div>
              </>
            )}
 
+           {activeTab === "posts" && (
+             <>
+                <h2 className="text-2xl font-bold mb-8 text-[#9cdcfe]">Article Manifest</h2>
+                <div className="space-y-2">
+                   {posts.length === 0 ? <p className="text-gray-500 italic">// No articles found.</p> : posts.map(post => (
+                     <div key={post.id} className="bg-[#252526] border border-[#333333] p-4 rounded group hover:border-[#007acc] transition-all cursor-pointer flex items-center" onClick={() => startEdit(post)}>
+                        <FileText className="w-4 h-4 mr-3 text-green-400" />
+                        <div>
+                          <div className="font-bold text-sm">{post.title}</div>
+                          <div className="text-[10px] text-gray-500">{post.slug}.md • {new Date(post.createdAt).toLocaleDateString()}</div>
+                        </div>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); deletePost(post.id); }}
+                          className="ml-auto text-gray-600 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 p-2"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                     </div>
+                   ))}
+                </div>
+             </>
+           )}
+
            {activeTab === "editor" && (
              <div className="h-full flex flex-col space-y-6">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold text-[#9cdcfe]">Draft Article</h2>
-                  <button 
-                    onClick={savePost} 
-                    disabled={saveStatus !== "idle"}
-                    className="bg-[#007acc] hover:bg-[#0062a3] text-white px-6 py-2 rounded text-sm flex items-center space-x-2 transition-all disabled:opacity-50"
-                  >
-                    <Save className="w-4 h-4" />
-                    <span>{saveStatus === "saving" ? "Compiling..." : saveStatus === "saved" ? "Success" : "Save to DB"}</span>
-                  </button>
+                  <h2 className="text-2xl font-bold text-[#9cdcfe]">{currentPost.id ? 'Edit Article' : 'New Article'}</h2>
+                  <div className="flex space-x-3">
+                    {currentPost.id && <button onClick={startNew} className="text-xs text-gray-500 hover:text-white px-4">Discard & New</button>}
+                    <button 
+                      onClick={savePost} 
+                      disabled={saveStatus !== "idle"}
+                      className="bg-[#007acc] hover:bg-[#0062a3] text-white px-6 py-2 rounded text-sm flex items-center space-x-2 transition-all disabled:opacity-50 shadow-lg shadow-blue-500/10"
+                    >
+                      <Save className="w-4 h-4" />
+                      <span>{saveStatus === "saving" ? "Writing..." : saveStatus === "saved" ? "Committed" : "Save to DB"}</span>
+                    </button>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
