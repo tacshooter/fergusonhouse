@@ -80,7 +80,7 @@ export function Sidebar({ activeFile, onFileSelect }: { activeFile: string; onFi
       <div className="p-3 text-[11px] uppercase tracking-wider font-bold opacity-70">
         Explorer: FergusonHouse
       </div>
-      <div className="flex-1 overflow-y-auto px-2">
+      <div className="flex-1 overflow-y-auto">
         {items.map((item) => (
           <SidebarItem key={item.name} item={item} depth={0} activeFile={activeFile} onFileSelect={onFileSelect} />
         ))}
@@ -105,16 +105,18 @@ function SidebarItem({ item, depth, activeFile, onFileSelect }: { item: FileItem
     <div>
       <div
         className={cn(
-          "flex items-center py-1 px-2 hover:bg-[#2a2d2e] cursor-pointer text-sm group",
-          isActive && "bg-[#37373d] text-white",
-          depth > 0 && "ml-4"
+          "flex items-center py-1 hover:bg-[#2a2d2e] cursor-pointer text-sm group pr-2",
+          isActive && "bg-[#37373d] text-white"
         )}
+        style={{ paddingLeft: `${(depth * 12) + 12}px` }}
         onClick={handleClick}
       >
-        {item.type === "folder" && (
+        {item.type === "folder" ? (
           <span className="mr-1 opacity-60">
             {isOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
           </span>
+        ) : (
+           <div className="w-5" />
         )}
         <span className="mr-2">
           {item.icon || (item.type === "folder" ? <Folder className="w-4 h-4 text-blue-400" /> : <FileText className="w-4 h-4 text-gray-400" />)}
