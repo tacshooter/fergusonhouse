@@ -13,7 +13,7 @@ export function WindowFrame({ children }: { children: React.ReactNode }) {
           <div className="w-3 h-3 rounded-full bg-[#27c93f] hover:brightness-90 transition-all cursor-pointer" />
         </div>
         <div className="flex-1 text-center text-[12px] text-gray-400 font-medium tracking-wide">
-          fergusonhouse — Visual Studio Code
+          Wowbagger OS — Open Source Studio v1.2
         </div>
         <div className="w-12" /> {/* Spacer for symmetry */}
       </div>

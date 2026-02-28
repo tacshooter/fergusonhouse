@@ -1,5 +1,35 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import fs from 'fs';
+import path from 'path';
+
+const HIERARCHY_CACHE_PATH = '/home/ubuntu/.openclaw/workspace/fergusonhouse/public/hierarchy.json';
+
+async function rebuildHierarchyCache() {
+  const folders = await prisma.folder.findMany({
+    include: { 
+      children: {
+        include: { 
+          children: true,
+          posts: {
+            select: { id: true, title: true, slug: true, published: true }
+          }
+        }
+      },
+      posts: {
+        select: { id: true, title: true, slug: true, published: true }
+      }
+    },
+    where: { parentId: null }
+  });
+
+  try {
+    fs.writeFileSync(HIERARCHY_CACHE_PATH, JSON.stringify(folders));
+  } catch (e) {
+    console.error("Failed to write hierarchy cache file:", e);
+  }
+  return folders;
+}
 
 export async function GET(request: Request) {
   try {
@@ -37,6 +67,8 @@ export async function POST(request: Request) {
       create: { title, slug, content, folderId }
     });
 
+    await rebuildHierarchyCache();
+
     return NextResponse.json(post);
   } catch (error) {
     console.error("Post API Error:", error);
@@ -56,6 +88,8 @@ export async function DELETE(request: Request) {
     await prisma.post.delete({
       where: { id }
     });
+
+    await rebuildHierarchyCache();
 
     return NextResponse.json({ success: true });
   } catch (error) {

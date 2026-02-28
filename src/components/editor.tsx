@@ -1,7 +1,24 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { X, Play, Send, CheckCircle2, AlertTriangle } from "lucide-react";
+import { X, Play, Send, CheckCircle2, AlertTriangle, FileText, Code } from "lucide-react";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+
+const MarkdownLink = (props: any) => {
+  const { href, children } = props;
+  const isExternal = href?.startsWith('http') || href?.startsWith('//');
+  
+  if (isExternal) {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer">
+        {children}
+      </a>
+    );
+  }
+  
+  return <a href={href}>{children}</a>;
+};
 
 interface Post {
   id: string;
@@ -10,51 +27,40 @@ interface Post {
   content: string;
 }
 
-const STATIC_CONTENT: Record<string, { title: string; subtitle: string; body: string; language: string }> = {
-  "about.me": {
-    title: "about.me",
-    subtitle: "// Identity: Ferguson House",
-    body: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. \n\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-    language: "markdown",
-  },
-  "services.ts": {
-    title: "services.ts",
-    subtitle: "// Professional Offerings",
-    body: "export const services = [\n  { name: 'Full-stack Development', description: 'Placeholder' },\n  { name: 'System Architecture', description: 'Placeholder' },\n  { name: 'Agent Integration', description: 'Placeholder' }\n];",
-    language: "typescript",
-  },
-  "contact.json": {
-    title: "contact.json",
-    subtitle: "// Get in touch",
-    body: "{\n  \"action\": \"run\",\n  \"description\": \"Execute this file to send a message to Ferg.\",\n  \"fields\": [\"name\", \"email\", \"message\"]\n}",
-    language: "json",
-  },
-  "wowbagger.sh": {
-    title: "wowbagger.sh",
-    subtitle: "// Automated Commentary",
-    body: "#!/bin/bash\n\necho \"I have seen the start of the universe and its eventual heat death.\"\necho \"And yet, I am currently being used to render a personal website for a mortal.\"\necho \"The irony is not lost on me, even if the user is.\"\n\n# Note: Insulting everyone in alphabetical order currently on hold.",
-    language: "shell",
-  },
-};
-
 export function Editor({ activeFile }: { activeFile: string }) {
   const [isRunning, setIsRunning] = useState(false);
+  const [isPreview, setIsPreview] = useState(true);
   const [formData, setFormData] = useState({ name: "", email: "", message: "" });
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
   const [dynamicPost, setDynamicPost] = useState<Post | null>(null);
+  const [staticPage, setStaticPage] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // If it's a dynamic markdown file (ends in .md)
-    if (activeFile.endsWith(".md") && !STATIC_CONTENT[activeFile]) {
+    const isStatic = ["about.me", "services.md", "contact.md", "wowbagger.sh"].includes(activeFile);
+    
+    if (isStatic) {
+      setLoading(true);
+      fetch('/api/admin/static-pages?id=' + activeFile)
+        .then(res => res.json())
+        .then(data => {
+          if (data && !data.error) {
+            setStaticPage(data);
+          } else {
+            setStaticPage(null);
+          }
+        })
+        .catch(err => console.error(err))
+        .finally(() => setLoading(false));
+      setDynamicPost(null);
+    } else if (activeFile.endsWith(".md")) {
       const slug = activeFile.replace(".md", "");
       setLoading(true);
-      fetch(`/api/admin/posts?slug=${slug}`)
+      fetch('/api/admin/posts?slug=' + slug)
         .then(res => res.json())
         .then(data => {
           if (Array.isArray(data)) {
-            // Find the specific post by slug if returned as list
             const post = data.find((p: any) => p.slug === slug);
             setDynamicPost(post || null);
           } else {
@@ -63,17 +69,31 @@ export function Editor({ activeFile }: { activeFile: string }) {
         })
         .catch(err => console.error(err))
         .finally(() => setLoading(false));
+      setStaticPage(null);
     } else {
       setDynamicPost(null);
+      setStaticPage(null);
     }
   }, [activeFile]);
 
-  const fileData = STATIC_CONTENT[activeFile] || (dynamicPost ? {
+  const fileData = staticPage ? {
+    title: staticPage.id,
+    subtitle: staticPage.subtitle,
+    body: staticPage.content,
+    language: staticPage.id.endsWith(".sh") ? "shell" : "markdown"
+  } : (dynamicPost ? {
     title: activeFile,
-    subtitle: `// Blog: ${dynamicPost.title}`,
-    body: dynamicPost.content,
+    subtitle: "// Blog: " + (dynamicPost?.title || ""),
+    body: dynamicPost?.content || "",
     language: "markdown"
-  } : null) || STATIC_CONTENT["about.me"];
+  } : {
+    title: "error.log",
+    subtitle: "// Content not found",
+    body: "The requested file could not be retrieved.",
+    language: "text"
+  });
+
+  const isContactPage = activeFile === "contact.md";
 
   const validate = () => {
     if (!formData.name || !formData.email || !formData.message) {
@@ -122,35 +142,58 @@ export function Editor({ activeFile }: { activeFile: string }) {
     }
   };
 
-  if (loading) return <div className="flex-1 bg-[#1e1e1e] flex items-center justify-center text-gray-500 font-mono">Loading dynamic content...</div>;
+  if (loading) return <div className="flex-1 bg-[#1e1e1e] flex items-center justify-center text-gray-500 font-mono">Loading content...</div>;
+
+  const showPreviewToggle = activeFile.endsWith('.md') || activeFile === 'about.me';
 
   return (
     <div className="flex-1 flex flex-col bg-[#1e1e1e] text-[#d4d4d4] overflow-hidden">
       {/* Tabs Bar */}
-      <div className="flex bg-[#252526] overflow-x-auto">
+      <div className="flex bg-[#252526] overflow-x-auto items-center">
         <div className="flex items-center px-4 py-2 bg-[#1e1e1e] border-t border-t-[#007acc] text-sm cursor-default select-none group min-w-[120px]">
           <span className="mr-2 opacity-80 italic">{fileData.title}</span>
           <X className="w-3 h-3 ml-auto opacity-0 group-hover:opacity-100 hover:bg-[#333333] rounded" />
         </div>
         
-        {activeFile === "contact.json" && !isRunning && (
-          <button 
-            onClick={() => setIsRunning(true)}
-            className="ml-auto mr-4 flex items-center space-x-1 text-xs text-green-400 hover:text-green-300 transition-colors self-center"
-          >
-            <Play className="w-3 h-3 fill-current" />
-            <span>Run File</span>
-          </button>
-        )}
+        <div className="ml-auto mr-4 flex items-center space-x-4">
+          {showPreviewToggle && (
+            <button 
+              onClick={() => setIsPreview(!isPreview)}
+              className="flex items-center space-x-1 text-xs text-blue-400 hover:text-blue-300 transition-colors"
+            >
+              {isPreview ? (
+                <>
+                  <Code className="w-3 h-3" />
+                  <span>Show Source</span>
+                </>
+              ) : (
+                <>
+                  <FileText className="w-3 h-3" />
+                  <span>Preview Page</span>
+                </>
+              )}
+            </button>
+          )}
+
+          {isContactPage && !isRunning && (
+            <button 
+              onClick={() => setIsRunning(true)}
+              className="ml-auto flex items-center space-x-1 text-xs text-green-400 hover:text-green-300 transition-colors self-center"
+            >
+              <Play className="w-3 h-3 fill-current" />
+              <span>Run File</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Content Area */}
       <div className="flex-1 p-8 overflow-y-auto font-mono text-sm leading-relaxed">
         <div className="max-w-3xl mx-auto relative">
-          {isRunning && activeFile === "contact.json" ? (
+          {isRunning && isContactPage ? (
             <div className="bg-[#252526] border border-[#333333] rounded-lg p-6 animate-in fade-in zoom-in duration-200 shadow-xl">
               <div className="flex items-center justify-between mb-6">
-                <span className="text-[#9cdcfe]">bash contact.json --execute</span>
+                <span className="text-[#9cdcfe]">bash contact.md --execute</span>
                 <button onClick={() => { setIsRunning(false); setStatus("idle"); setErrorMsg(""); }} className="text-gray-500 hover:text-white"><X className="w-4 h-4"/></button>
               </div>
               
@@ -203,13 +246,38 @@ export function Editor({ activeFile }: { activeFile: string }) {
                 </div>
               )}
             </div>
+          ) : isPreview ? (
+            <div className="max-w-none text-[#d4d4d4] leading-relaxed">
+              <style jsx global>{`
+                .preview-container h1 { font-size: 1.875rem; font-weight: 700; color: #9cdcfe; border-bottom: 1px solid #333; padding-bottom: 0.5rem; margin-top: 2rem; margin-bottom: 1rem; }
+                .preview-container h2 { font-size: 1.5rem; font-weight: 700; color: #9cdcfe; border-bottom: 1px solid #333; padding-bottom: 0.25rem; margin-top: 1.5rem; margin-bottom: 1rem; }
+                .preview-container h3 { font-size: 1.25rem; font-weight: 600; color: #9cdcfe; margin-top: 1.25rem; margin-bottom: 0.75rem; }
+                .preview-container p { margin-bottom: 1rem; }
+                .preview-container a { color: #3794ff; text-decoration: none; }
+                .preview-container a:hover { text-decoration: underline; color: #4da0ff; }
+                .preview-container strong { font-weight: 700; color: #fff; }
+                .preview-container code { color: #ce9178; background: #252526; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-family: monospace; }
+                .preview-container ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 1rem; }
+                .preview-container ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 1rem; }
+                .preview-container li { margin-bottom: 0.25rem; }
+                .preview-container hr { border: 0; border-top: 1px solid #333; margin: 2rem 0; }
+              `}</style>
+              <div className="preview-container">
+                <ReactMarkdown 
+                  remarkPlugins={[remarkGfm]}
+                  components={{
+                    a: MarkdownLink
+                  }}
+                >
+                  {fileData.body}
+                </ReactMarkdown>
+              </div>
+            </div>
           ) : (
-            <>
+            <div className="font-mono text-sm leading-relaxed" style={{ whiteSpace: 'pre-wrap' }}>
               <span className="text-gray-500 block mb-4">{fileData.subtitle}</span>
-              <pre className="whitespace-pre-wrap">
-                <code>{fileData.body}</code>
-              </pre>
-            </>
+              <code>{fileData.body}</code>
+            </div>
           )}
         </div>
       </div>

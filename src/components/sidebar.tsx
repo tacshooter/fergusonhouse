@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Folder, FileText, ChevronRight, ChevronDown, User, Briefcase, Mail, Cpu } from "lucide-react";
+import { Folder, FileText, ChevronRight, ChevronDown, User, Briefcase, Mail, Cpu, Code } from "lucide-react";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -24,8 +24,16 @@ export function Sidebar({ activeFile, onFileSelect }: { activeFile: string; onFi
   useEffect(() => {
     const fetchHierarchy = async () => {
       try {
-        const res = await fetch("/api/admin/folders");
-        const folders = await res.json();
+        // First, try to fetch from the static hierarchy.json file for maximum speed
+        let folders;
+        const staticRes = await fetch("/hierarchy.json", { cache: 'no-store' });
+        if (staticRes.ok) {
+          folders = await staticRes.json();
+        } else {
+          // Fallback to the API if the static file doesn't exist yet
+          const res = await fetch("/api/admin/folders");
+          folders = await res.json();
+        }
         
         const mapFolder = (f: any): FileItem => ({
           id: f.id,
@@ -47,7 +55,7 @@ export function Sidebar({ activeFile, onFileSelect }: { activeFile: string; onFi
         setItems([
           ...dynamicItems,
           {
-            name: "services.ts",
+            name: "services.md",
             type: "file",
             icon: <Briefcase className="w-4 h-4 text-blue-400" />,
           },
@@ -57,7 +65,7 @@ export function Sidebar({ activeFile, onFileSelect }: { activeFile: string; onFi
             icon: <User className="w-4 h-4 text-orange-400" />,
           },
           {
-            name: "contact.json",
+            name: "contact.md",
             type: "file",
             icon: <Mail className="w-4 h-4 text-yellow-400" />,
           },

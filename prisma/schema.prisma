@@ -10,12 +10,12 @@ datasource db {
 model Folder {
   id        String   @id @default(cuid())
   name      String
-  parentId  String?  
+  parentId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   parent    Folder?  @relation("SubFolders", fields: [parentId], references: [id])
   children  Folder[] @relation("SubFolders")
   posts     Post[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
 
 model Post {
@@ -24,9 +24,17 @@ model Post {
   slug      String   @unique
   content   String
   folderId  String
-  folder    Folder   @relation(fields: [folderId], references: [id])
   published Boolean  @default(false)
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  folder    Folder   @relation(fields: [folderId], references: [id])
+}
+
+model StaticPage {
+  id        String   @id
+  title     String
+  subtitle  String
+  content   String
   updatedAt DateTime @updatedAt
 }
 

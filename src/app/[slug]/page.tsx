@@ -6,11 +6,28 @@ import { Editor } from "@/components/editor";
 import { WindowFrame } from "@/components/window-frame";
 import { Logo } from "@/components/logo";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 
-export default function Home() {
+export default function SlugPage() {
   const router = useRouter();
-  const [activeFile, setActiveFile] = useState("about.me");
+  const params = useParams();
+  const slug = params.slug as string;
+  
+  // Convert URL slug back to internal filename
+  // services -> services.md, about-me -> about-me.md
+  // exceptions for special files: contact.json -> contact.json, etc.
+  const getInitialFile = (s: string) => {
+    if (!s) return "about.me";
+    if (s === "about-me" || s === "about.me") return "about.me";
+    if (s === "contact") return "contact.md";
+    if (s === "wowbagger") return "wowbagger.sh";
+    if (s === "services") return "services.md";
+    if (s.endsWith(".md") || s.endsWith(".ts") || s.endsWith(".json") || s.endsWith(".sh")) return s;
+    // Default to adding .md for blog/dynamic content
+    return `${s}.md`;
+  };
+
+  const [activeFile, setActiveFile] = useState(getInitialFile(slug));
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   // Update URL when active file changes
