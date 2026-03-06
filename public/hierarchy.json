@@ -1,1 +1,78 @@
-[{"id":"cml739gi900008fqqsbiaqffs","name":"blog","parentId":null,"createdAt":"2026-02-03T21:06:22.546Z","updatedAt":"2026-02-03T21:06:22.546Z","children":[{"id":"cml739gi900018fqq5y9e197y","name":"projects","parentId":"cml739gi900008fqqsbiaqffs","createdAt":"2026-02-03T21:06:22.546Z","updatedAt":"2026-02-03T21:06:22.546Z","children":[],"posts":[{"id":"cml7bspy500016qwbub2ot84i","title":"The Architecture of an Immortal CMS","slug":"the-architecture-of-an-immortal-cms","published":true}]},{"id":"cml739gi900028fqql95o2p68","name":"conventions","parentId":"cml739gi900008fqqsbiaqffs","createdAt":"2026-02-03T21:06:22.546Z","updatedAt":"2026-02-03T21:06:22.546Z","children":[],"posts":[{"id":"cml76wq4h0001z38hc5fbyu6z","title":"GitHub Universe 23","slug":"github-universe-23","published":false}]},{"id":"cml739gi900038fqqxh1uqfw1","name":"automated-code-gen","parentId":"cml739gi900008fqqsbiaqffs","createdAt":"2026-02-03T21:06:22.546Z","updatedAt":"2026-02-03T21:06:22.546Z","children":[],"posts":[{"id":"cml8qn1my00014lfd3dudsv78","title":"The Silent Symphony: Coding at the Speed of Thought","slug":"coding-at-the-speed-of-thought","published":true},{"id":"cml8soa510001g4evtxyhg13d","title":"The ROI of Intelligence: A Case for Copilot","slug":"the-roi-of-intelligence-case-for-copilot","published":true},{"id":"cml8t0nnb0001lsnfmsv8wn7l","title":"Senior Outcomes from Junior Hands: The AI Mentorship Model","slug":"senior-outcomes-junior-hands-ai-mentorship","published":true}]}],"posts":[]}]
+[
+  {
+    "id": "cml739gi900008fqqsbiaqffs",
+    "name": "blog",
+    "parentId": null,
+    "createdAt": "2026-02-03T21:06:22.546Z",
+    "updatedAt": "2026-02-03T21:06:22.546Z",
+    "children": [
+      {
+        "id": "cml739gi900018fqq5y9e197y",
+        "name": "projects",
+        "parentId": "cml739gi900008fqqsbiaqffs",
+        "createdAt": "2026-02-03T21:06:22.546Z",
+        "updatedAt": "2026-02-03T21:06:22.546Z",
+        "posts": [
+          {
+            "id": "cml7bspy500016qwbub2ot84i",
+            "title": "The Architecture of an Immortal CMS",
+            "slug": "the-architecture-of-an-immortal-cms"
+          }
+        ]
+      },
+      {
+        "id": "cml739gi900028fqql95o2p68",
+        "name": "conventions",
+        "parentId": "cml739gi900008fqqsbiaqffs",
+        "createdAt": "2026-02-03T21:06:22.546Z",
+        "updatedAt": "2026-02-03T21:06:22.546Z",
+        "posts": [
+          {
+            "id": "cml76wq4h0001z38hc5fbyu6z",
+            "title": "GitHub Universe 23",
+            "slug": "github-universe-23"
+          }
+        ]
+      },
+      {
+        "id": "cml739gi900038fqqxh1uqfw1",
+        "name": "automated-code-gen",
+        "parentId": "cml739gi900008fqqsbiaqffs",
+        "createdAt": "2026-02-03T21:06:22.546Z",
+        "updatedAt": "2026-02-03T21:06:22.546Z",
+        "posts": [
+          {
+            "id": "cml8qn1my00014lfd3dudsv78",
+            "title": "The Silent Symphony: Coding at the Speed of Thought",
+            "slug": "coding-at-the-speed-of-thought"
+          },
+          {
+            "id": "cml8soa510001g4evtxyhg13d",
+            "title": "The ROI of Intelligence: A Case for Copilot",
+            "slug": "the-roi-of-intelligence-case-for-copilot"
+          },
+          {
+            "id": "cml8t0nnb0001lsnfmsv8wn7l",
+            "title": "Senior Outcomes from Junior Hands: The AI Mentorship Model",
+            "slug": "senior-outcomes-junior-hands-ai-mentorship"
+          }
+        ]
+      },
+      {
+        "id": "cmme50m46000113p3fvhrr4wq",
+        "name": "openclaw",
+        "parentId": "cml739gi900008fqqsbiaqffs",
+        "createdAt": "2026-03-06T00:09:34.707Z",
+        "updatedAt": "2026-03-06T00:09:34.707Z",
+        "posts": [
+          {
+            "id": "cmmf5d9cz0001rawk9xr26ad3",
+            "title": "The OpenClaw Philosophy: Beyond the Chatbot",
+            "slug": "openclaw-philosophy-beyond-chatbot"
+          }
+        ]
+      }
+    ],
+    "posts": []
+  }
+]

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Lock, Mail, FolderPlus, LogOut, Plus, Trash2, Folder as FolderIcon, ChevronRight, PenSquare, Save, FileText, LayoutList, Eye, Code, FileCode } from "lucide-react";
+import { Lock, Mail, FolderPlus, LogOut, Plus, Trash2, Folder as FolderIcon, ChevronRight, PenSquare, Save, FileText, LayoutList, Eye, Code, FileCode, Cpu } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -17,13 +17,14 @@ interface StaticPage { id: string; title: string; subtitle: string; content: str
 
 export default function AdminPage() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [activeTab, setActiveTab] = useState<"inbox" | "folders" | "editor" | "posts" | "static">("inbox");
+  const [activeTab, setActiveTab] = useState<"inbox" | "folders" | "editor" | "posts" | "static" | "schedule">("inbox");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [folders, setFolders] = useState<Folder[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
   const [staticPages, setStaticPages] = useState<StaticPage[]>([]);
   const [messages, setMessages] = useState<any[]>([]);
+  const [schedule, setSchedule] = useState<any[]>([]);
   const [newFolderName, setNewFolderName] = useState("");
   const [selectedParent, setSelectedParent] = useState<{id: string, name: string} | null>(null);
   const [error, setError] = useState("");
@@ -40,11 +41,12 @@ export default function AdminPage() {
     if (res.ok) { setIsLoggedIn(true); refreshData(); } else { setError("Access Denied: Invalid Credentials"); }
   };
 
-  const refreshData = () => { fetchFolders(); fetchMessages(); fetchPosts(); fetchStaticPages(); };
+  const refreshData = () => { fetchFolders(); fetchMessages(); fetchPosts(); fetchStaticPages(); fetchSchedule(); };
   const fetchFolders = async () => { try { const res = await fetch("/api/admin/folders"); const data = await res.json(); if (Array.isArray(data)) setFolders(data); } catch (e) { console.error(e); } };
   const fetchPosts = async () => { try { const res = await fetch("/api/admin/posts"); const data = await res.json(); if (Array.isArray(data)) setPosts(data); } catch (e) { console.error(e); } };
   const fetchMessages = async () => { try { const res = await fetch("/api/admin/messages"); const data = await res.json(); if (Array.isArray(data)) setMessages(data); } catch (e) { console.error(e); } };
   const fetchStaticPages = async () => { try { const res = await fetch("/api/admin/static-pages"); const data = await res.json(); if (Array.isArray(data)) setStaticPages(data); } catch (e) { console.error(e); } };
+  const fetchSchedule = async () => { try { const res = await fetch("/api/admin/schedule"); const data = await res.json(); if (Array.isArray(data)) setSchedule(data); else setSchedule([]); } catch (e) { console.error(e); setSchedule([]); } };
 
   const deleteMessage = async (id: string) => { if (!confirm("Are you sure?")) return; const res = await fetch(`/api/admin/messages?id=${id}`, { method: "DELETE" }); if (res.ok) fetchMessages(); };
   const deletePost = async (id: string) => { if (!confirm("Permanently delete this article?")) return; const res = await fetch(`/api/admin/posts?id=${id}`, { method: "DELETE" }); if (res.ok) fetchPosts(); };
@@ -101,6 +103,7 @@ export default function AdminPage() {
               <div onClick={() => setActiveTab("inbox")} className={`flex items-center p-2 rounded text-sm cursor-pointer transition-colors ${activeTab === 'inbox' ? 'bg-[#37373d] text-white' : 'hover:bg-[#2a2d2e] opacity-60'}`}><Mail className="w-4 h-4 mr-3 text-blue-400" /> Inbox</div>
               <div onClick={() => setActiveTab("folders")} className={`flex items-center p-2 rounded text-sm cursor-pointer transition-colors ${activeTab === 'folders' ? 'bg-[#37373d] text-white' : 'hover:bg-[#2a2d2e] opacity-60'}`}><FolderPlus className="w-4 h-4 mr-3 text-orange-400" /> Structure</div>
               <div onClick={() => setActiveTab("static")} className={`flex items-center p-2 rounded text-sm cursor-pointer transition-colors ${activeTab === 'static' ? 'bg-[#37373d] text-white' : 'hover:bg-[#2a2d2e] opacity-60'}`}><FileCode className="w-4 h-4 mr-3 text-blue-300" /> Static Pages</div>
+              <div onClick={() => setActiveTab("schedule")} className={`flex items-center p-2 rounded text-sm cursor-pointer transition-colors ${activeTab === 'schedule' ? 'bg-[#37373d] text-white' : 'hover:bg-[#2a2d2e] opacity-60'}`}><LayoutList className="w-4 h-4 mr-3 text-yellow-400" /> Blog Schedule</div>
               <div onClick={() => setActiveTab("posts")} className={`flex items-center p-2 rounded text-sm cursor-pointer transition-colors ${activeTab === 'posts' ? 'bg-[#37373d] text-white' : 'hover:bg-[#2a2d2e] opacity-60'}`}><LayoutList className="w-4 h-4 mr-3 text-purple-400" /> All Posts</div>
               <div onClick={startNew} className={`flex items-center p-2 rounded text-sm cursor-pointer transition-colors ${activeTab === 'editor' && editingType === 'post' && !currentPost.id ? 'bg-[#37373d] text-white' : 'hover:bg-[#2a2d2e] opacity-60'}`}><PenSquare className="w-4 h-4 mr-3 text-green-400" /> New Post</div>
            </nav>
@@ -111,6 +114,40 @@ export default function AdminPage() {
            )}
            {activeTab === "folders" && (
              <><h2 className="text-2xl font-bold mb-8 text-[#9cdcfe]">File System</h2><div className="mb-8 p-4 bg-[#252526] border border-[#333333] rounded"><div className="flex flex-col space-y-3">{selectedParent && <div className="text-[10px] text-[#007acc] flex items-center"><ChevronRight className="w-3 h-3 mr-1" /> Target: <span className="font-bold ml-1">{selectedParent.name}</span><button onClick={() => setSelectedParent(null)} className="ml-2 underline">cancel</button></div>}<div className="flex space-x-2"><input className="bg-[#1e1e1e] border border-[#333333] p-2 text-sm outline-none focus:border-[#007acc] flex-1" placeholder="Folder name..." value={newFolderName} onChange={e => setNewFolderName(e.target.value)} /><button onClick={createFolder} className="bg-[#007acc] hover:bg-[#0062a3] text-white px-4 text-sm flex items-center"><Plus className="w-4 h-4 mr-2" /> {selectedParent ? 'Sub' : 'Root'}</button></div></div></div><div className="space-y-2">{folders.map(f => (<div key={f.id} className={`bg-[#252526] border p-4 rounded ${selectedParent?.id === f.id ? 'border-[#007acc]' : 'border-[#333333]'}`}><div className="flex items-center"><FolderIcon className="w-4 h-4 mr-3 text-blue-400" /><span className="font-bold text-sm">{f.name}</span><Plus onClick={() => setSelectedParent({id: f.id, name: f.name})} className="ml-auto w-4 h-4 text-gray-500 hover:text-green-400 cursor-pointer transition-all" /></div>{f.children?.map(c => <div key={c.id} className="ml-6 mt-2 text-xs opacity-60 flex items-center group/sub"><ChevronRight className="w-3 h-3 mr-2 opacity-30" />{c.name}</div>)}</div>))}</div></>
+           )}
+           {activeTab === "schedule" && (
+             <><h2 className="text-2xl font-bold mb-8 text-[#9cdcfe]">Blog Generation Schedule</h2>
+               <div className="bg-[#252526] border border-[#333333] rounded overflow-hidden">
+                 <table className="w-full text-left text-sm">
+                   <thead className="bg-[#323233] text-gray-400 uppercase text-[10px] tracking-widest">
+                     <tr>
+                       <th className="px-6 py-3 font-bold">Date</th>
+                       <th className="px-6 py-3 font-bold">Topic</th>
+                       <th className="px-6 py-3 font-bold">Slug</th>
+                       <th className="px-6 py-3 font-bold">Status</th>
+                     </tr>
+                   </thead>
+                   <tbody className="divide-y divide-[#333333]">
+                     {schedule.map((item, i) => (
+                       <tr key={i} className="hover:bg-[#2a2d2e] transition-colors">
+                         <td className="px-6 py-4 font-mono text-[#ce9178]">{item.date}</td>
+                         <td className="px-6 py-4 font-bold text-gray-200">{item.topic}</td>
+                         <td className="px-6 py-4 font-mono text-xs text-gray-500">{item.slug}</td>
+                         <td className="px-6 py-4">
+                           <span className={`px-2 py-1 rounded-[4px] text-[10px] font-bold uppercase tracking-wider ${item.status === 'Published' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'}`}>
+                             {item.status}
+                           </span>
+                         </td>
+                       </tr>
+                     ))}
+                   </tbody>
+                 </table>
+               </div>
+               <div className="mt-6 p-4 bg-[#1e1e1e] border border-[#333333] rounded flex items-center space-x-3">
+                 <Cpu className="w-4 h-4 text-[#007acc]" />
+                 <p className="text-xs text-gray-500">Automated series generation is active. Next run: <span className="text-gray-300 font-bold">Tomorrow @ 07:00 CST</span></p>
+               </div>
+             </>
            )}
            {activeTab === "posts" && (
              <><h2 className="text-2xl font-bold mb-8 text-[#9cdcfe]">Article Manifest</h2><div className="space-y-2">{posts.length === 0 ? <p className="text-gray-500 italic">// No articles found.</p> : posts.map(post => (<div key={post.id} className="bg-[#252526] border border-[#333333] p-4 rounded group hover:border-[#007acc] transition-all cursor-pointer flex items-center" onClick={() => startEdit(post)}><FileText className="w-4 h-4 mr-3 text-green-400" /><div><div className="font-bold text-sm">{post.title}</div><div className="text-[10px] text-gray-500">{post.slug}.md • {new Date(post.createdAt).toLocaleDateString()}</div></div><button onClick={(e) => { e.stopPropagation(); deletePost(post.id); }} className="ml-auto text-gray-600 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 p-2"><Trash2 className="w-4 h-4" /></button></div>))}</div></>
