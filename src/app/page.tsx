@@ -3,15 +3,17 @@
 import React, { useState, useEffect } from "react";
 import { Sidebar } from "@/components/sidebar";
 import { Editor } from "@/components/editor";
+import { RecentPosts } from "@/components/recent-posts";
 import { WindowFrame } from "@/components/window-frame";
 import { Logo } from "@/components/logo";
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Clock } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
   const router = useRouter();
   const [activeFile, setActiveFile] = useState("about.me");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isRecentOpen, setIsRecentOpen] = useState(false);
 
   // Update URL when active file changes
   const handleFileSelect = (name: string, slug?: string) => {
@@ -34,19 +36,28 @@ export default function Home() {
       </div>
       
       <WindowFrame>
-        <div className="w-12 bg-[#333333] flex flex-col items-center py-4 space-y-4 shrink-0 border-r border-black/20">
+        <div className="w-12 bg-[#333333] flex flex-col items-center py-4 space-y-6 shrink-0 border-r border-black/20">
           <button 
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="text-gray-400 hover:text-white transition-colors"
+            className={cn("transition-colors", isSidebarOpen ? "text-white" : "text-gray-500 hover:text-gray-300")}
+            title="Toggle Sidebar (Explorer)"
           >
-            {isSidebarOpen ? <PanelLeftClose className="w-6 h-6" /> : <PanelLeftOpen className="w-6 h-6" />}
+            <PanelLeftClose className="w-6 h-6" />
+          </button>
+          
+          <button 
+            onClick={() => setIsRecentOpen(!isRecentOpen)}
+            className={cn("transition-colors", isRecentOpen ? "text-white" : "text-gray-500 hover:text-gray-300")}
+            title="Toggle Recent Posts"
+          >
+            <Clock className="w-6 h-6" />
           </button>
         </div>
 
         <div className={`transition-all duration-300 ease-in-out overflow-hidden flex shrink-0 ${isSidebarOpen ? 'w-64' : 'w-0'}`}>
           <div className="flex flex-col w-full h-full">
             <div className="h-12 bg-[#252526] border-b border-[#333333] flex items-center px-4">
-              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Ferguson House</span>
+              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Explorer</span>
             </div>
             <Sidebar activeFile={activeFile} onFileSelect={handleFileSelect} />
           </div>
@@ -66,7 +77,20 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        <div className={`transition-all duration-300 ease-in-out overflow-hidden flex shrink-0 ${isRecentOpen ? 'w-64' : 'w-0'}`}>
+          <div className="flex flex-col w-full h-full">
+            <div className="h-12 bg-[#252526] border-b border-[#333333] flex items-center px-4">
+              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Secondary Sidebar</span>
+            </div>
+            <RecentPosts onPostSelect={handleFileSelect} />
+          </div>
+        </div>
       </WindowFrame>
     </main>
   );
+}
+
+function cn(...inputs: any[]) {
+  return inputs.filter(Boolean).join(" ");
 }
