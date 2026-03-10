@@ -22,6 +22,7 @@ export default function SlugPage() {
     if (s === "contact") return "contact.md";
     if (s === "wowbagger") return "wowbagger.sh";
     if (s === "services") return "services.md";
+    if (s.startsWith("category-")) return s;
     if (s.endsWith(".md") || s.endsWith(".ts") || s.endsWith(".json") || s.endsWith(".sh")) return s;
     // Default to adding .md for blog/dynamic content
     return `${s}.md`;
@@ -31,10 +32,10 @@ export default function SlugPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   // Update URL when active file changes
-  const handleFileSelect = (name: string) => {
+  const handleFileSelect = (name: string, slug?: string) => {
     setActiveFile(name);
     // Convert filename to pretty URL slug
-    let newSlug = name.replace(/\.md$/, "");
+    let newSlug = slug || name.replace(/\.md$/, "");
     if (newSlug === "about.me") newSlug = "about-me";
     if (newSlug === "contact.md") newSlug = "contact";
     if (newSlug === "wowbagger.sh") newSlug = "wowbagger";
@@ -68,7 +69,7 @@ export default function SlugPage() {
         </div>
 
         <div className="flex-1 flex flex-col min-w-0">
-          <Editor activeFile={activeFile} />
+          <Editor activeFile={activeFile} onFileSelect={handleFileSelect} />
           <div className="h-6 bg-[#007acc] text-white flex items-center px-3 text-[11px] select-none shrink-0">
             <div className="flex items-center space-x-4">
               <span>main*</span>

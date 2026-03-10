@@ -62,16 +62,16 @@ export function Editor({ activeFile, onFileSelect }: { activeFile: string; onFil
         .finally(() => setLoading(false));
       setDynamicPost(null);
       setCategoryData(null);
-    } else if (activeFile.endsWith(".html")) {
+    } else if (activeFile.endsWith(".html") || activeFile.startsWith("category-")) {
       // It's a category view
       setLoading(true);
       fetch('/api/admin/folders')
         .then(res => res.json())
         .then(data => {
-          // Flatten the tree to find the folder matching the name
+          // Flatten the tree to find the folder matching the name or ID
           const findFolder = (folders: any[]): any => {
             for (const f of folders) {
-              if (`${f.name}.html` === activeFile) return f;
+              if (`${f.name}.html` === activeFile || `category-${f.id}` === activeFile) return f;
               if (f.children) {
                 const found = findFolder(f.children);
                 if (found) return found;
@@ -113,7 +113,7 @@ export function Editor({ activeFile, onFileSelect }: { activeFile: string; onFil
   }, [activeFile]);
 
   const fileData = categoryData ? {
-    title: activeFile,
+    title: activeFile.startsWith("category-") ? `${categoryData.name}.html` : activeFile,
     subtitle: "// Category: " + categoryData.name,
     body: "",
     language: "html"
