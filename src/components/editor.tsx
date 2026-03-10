@@ -132,7 +132,7 @@ export function Editor({ activeFile, onFileSelect }: { activeFile: string; onFil
     subtitle: "// Content not found",
     body: "The requested file could not be retrieved.",
     language: "text"
-  });
+  }));
 
   const isContactPage = activeFile === "contact.md";
 

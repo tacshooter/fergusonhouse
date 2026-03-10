@@ -1,0 +1,10 @@
+
+> fergusonhouse_temp@0.1.0 start
+> next start -p 3000
+
+▲ Next.js 16.1.6
+- Local:         http://localhost:3000
+- Network:       http://172.31.82.193:3000
+
+✓ Starting...
+✓ Ready in 369ms
