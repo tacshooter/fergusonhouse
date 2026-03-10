@@ -47,7 +47,7 @@ export function Sidebar({ activeFile, onFileSelect }: { activeFile: string; onFi
               name: `${f.name}.html`,
               type: "file" as const,
               icon: <Code className="w-4 h-4 text-purple-400" />,
-              slug: `category-${f.id}`
+              slug: `category-${f.name}`
             }] : []),
             /* 
             // Hide individual posts to save space, now accessible via .html view

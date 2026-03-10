@@ -71,7 +71,7 @@ export function Editor({ activeFile, onFileSelect }: { activeFile: string; onFil
           // Flatten the tree to find the folder matching the name or ID
           const findFolder = (folders: any[]): any => {
             for (const f of folders) {
-              if (`${f.name}.html` === activeFile || `category-${f.id}` === activeFile) return f;
+              if (`${f.name}.html` === activeFile || `category-${f.name}` === activeFile) return f;
               if (f.children) {
                 const found = findFolder(f.children);
                 if (found) return found;
