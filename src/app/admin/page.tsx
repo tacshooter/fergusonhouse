@@ -121,6 +121,7 @@ export default function AdminPage() {
                  <table className="w-full text-left text-sm">
                    <thead className="bg-[#323233] text-gray-400 uppercase text-[10px] tracking-widest">
                      <tr>
+                       <th className="px-6 py-3 font-bold">Week</th>
                        <th className="px-6 py-3 font-bold">Date</th>
                        <th className="px-6 py-3 font-bold">Topic</th>
                        <th className="px-6 py-3 font-bold">Slug</th>
@@ -129,20 +130,39 @@ export default function AdminPage() {
                    </thead>
                    <tbody className="divide-y divide-[#333333]">
                      {schedule.map((item, i) => (
-                       <tr key={i} className="hover:bg-[#2a2d2e] transition-colors">
-                         <td className="px-6 py-4 font-mono text-[#ce9178]">{item.date}</td>
+                       <tr key={item.id || i} className="hover:bg-[#2a2d2e] transition-colors">
+                         <td className="px-6 py-4 font-mono text-gray-500">W{item.week_no || '-'}</td>
+                         <td className="px-6 py-4 font-mono text-[#ce9178]">{new Date(item.date).toLocaleDateString()}</td>
                          <td className="px-6 py-4 font-bold text-gray-200">{item.topic}</td>
-                         <td className="px-6 py-4 font-mono text-xs text-gray-500">{item.slug}</td>
+                         <td className="px-6 py-4 font-mono text-xs text-gray-500">{item.slug || '-'}</td>
                          <td className="px-6 py-4">
-                           <span className={`px-2 py-1 rounded-[4px] text-[10px] font-bold uppercase tracking-wider ${item.status === 'Published' ? 'bg-green-500/10 text-green-400 border border-green-500/20' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'}`}>
+                           <button 
+                             onClick={async () => {
+                               const nextStatus = item.status === 'PENDING' ? 'SCHEDULED' : item.status === 'SCHEDULED' ? 'PUBLISHED' : 'PENDING';
+                               if (confirm(`Flip status to ${nextStatus}?`)) {
+                                 const res = await fetch('/api/admin/schedule', {
+                                   method: 'PATCH',
+                                   headers: { 'Content-Type': 'application/json' },
+                                   body: JSON.stringify({ id: item.id, status: nextStatus })
+                                 });
+                                 if (res.ok) fetchSchedule();
+                               }
+                             }}
+                             className={`px-2 py-1 rounded-[4px] text-[10px] font-bold uppercase tracking-wider transition-all border ${
+                               item.status === 'PUBLISHED' ? 'bg-green-500/10 text-green-400 border-green-500/20' : 
+                               item.status === 'SCHEDULED' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 
+                               'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+                             }`}
+                           >
                              {item.status}
-                           </span>
+                           </button>
                          </td>
                        </tr>
                      ))}
                    </tbody>
                  </table>
                </div>
+
                <div className="mt-6 p-4 bg-[#1e1e1e] border border-[#333333] rounded flex items-center space-x-3">
                  <Cpu className="w-4 h-4 text-[#007acc]" />
                  <p className="text-xs text-gray-500">Automated series generation is active. Next run: <span className="text-gray-300 font-bold">Tomorrow @ 07:00 CST</span></p>

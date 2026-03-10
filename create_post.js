@@ -2,10 +2,40 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 
 async function main() {
-  const title = process.argv[2];
-  const slug = process.argv[3];
-  const content = process.argv[4];
+  let title = process.argv[2];
+  let slug = process.argv[3];
+  let content = process.argv[4];
   const folderName = process.argv[5] || 'openclaw';
+  let scheduleId = null;
+
+  if (title === '--from-schedule') {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const scheduledItem = await prisma.blogSchedule.findFirst({
+      where: {
+        status: 'SCHEDULED',
+        date: { lte: new Date(today.getTime() + 24 * 60 * 60 * 1000) } // Allow for slight drift/early runs
+      },
+      orderBy: { date: 'asc' }
+    });
+
+    if (!scheduledItem) {
+      console.log('No scheduled post found for today.');
+      return;
+    }
+
+    title = scheduledItem.topic;
+    slug = scheduledItem.slug;
+    scheduleId = scheduledItem.id;
+    // content should be provided as the next argument or piped in
+    content = process.argv[3]; 
+
+    if (!content) {
+      console.error('Usage with --from-schedule: node create_post.js --from-schedule <content>');
+      process.exit(1);
+    }
+  }
 
   if (!title || !slug || !content) {
     console.error('Usage: node create_post.js <title> <slug> <content> [folderName]');
@@ -29,6 +59,14 @@ async function main() {
   });
 
   console.log('Created post:', post.id);
+
+  if (scheduleId) {
+    await prisma.blogSchedule.update({
+      where: { id: scheduleId },
+      data: { status: 'PUBLISHED' }
+    });
+    console.log('Updated schedule item status to PUBLISHED.');
+  }
 
   // Update hierarchy.json
   try {

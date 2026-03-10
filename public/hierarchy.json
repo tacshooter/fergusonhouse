@@ -31,6 +31,16 @@
             "id": "cml76wq4h0001z38hc5fbyu6z",
             "title": "GitHub Universe 23",
             "slug": "github-universe-23"
+          },
+          {
+            "id": "cmmggqh520001yqldpu8aewfb",
+            "title": "GitHub Universe 2024: The Rise of the AI Agent Workspace",
+            "slug": "github-universe-2024-ai-agent-workspace"
+          },
+          {
+            "id": "cmmghdj0x0001ikcxl7tysfq2",
+            "title": "GitHub Universe 2025: Mission Control for a Multi-Agent World",
+            "slug": "github-universe-2025-multi-agent-mission-control"
           }
         ]
       },
@@ -69,6 +79,26 @@
             "id": "cmmf5d9cz0001rawk9xr26ad3",
             "title": "The OpenClaw Philosophy: Beyond the Chatbot",
             "slug": "openclaw-philosophy-beyond-chatbot"
+          },
+          {
+            "id": "cmmgbzy7f0001bitgz4vtykt4",
+            "title": "The Anatomy of a Skill: Giving Your Agent Hands",
+            "slug": "anatomy-of-a-skill-giving-agent-hands"
+          },
+          {
+            "id": "cmmhpacu60001k3vm6ovvnvbx",
+            "title": "The Multilingual Agent: Breaking the Language Barrier",
+            "slug": "multilingual-agent-breaking-language-barrier"
+          },
+          {
+            "id": "cmmj4qceq00016ydrtb98r8j6",
+            "title": "Community Spotlight: 13,000 Hands and Counting",
+            "slug": "community-spotlight-13000-hands-and-counting"
+          },
+          {
+            "id": "cmmkk63on00017obqaq4rhku8",
+            "title": "The Proactive Assistant: Moving Beyond the Prompt",
+            "slug": "proactive-assistant-moving-beyond-prompt"
           }
         ]
       }
