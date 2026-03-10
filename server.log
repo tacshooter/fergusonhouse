@@ -7,31 +7,112 @@
 - Network:       http://172.31.82.193:3000
 
 ✓ Starting...
-✓ Ready in 369ms
-Error: Failed to find Server Action "x". This request might be from an older or newer deployment.
-Read more: https://nextjs.org/docs/messages/failed-to-find-server-action
-    at ignore-listed frames
-Error: Failed to find Server Action "x". This request might be from an older or newer deployment.
-Read more: https://nextjs.org/docs/messages/failed-to-find-server-action
-    at ignore-listed frames
-Error: Failed to find Server Action "x". This request might be from an older or newer deployment.
-Read more: https://nextjs.org/docs/messages/failed-to-find-server-action
-    at ignore-listed frames
-Error: Failed to find Server Action "x". This request might be from an older or newer deployment.
-Read more: https://nextjs.org/docs/messages/failed-to-find-server-action
-    at ignore-listed frames
-Error: Failed to find Server Action "x". This request might be from an older or newer deployment.
-Read more: https://nextjs.org/docs/messages/failed-to-find-server-action
-    at ignore-listed frames
-Error: Failed to find Server Action "x". This request might be from an older or newer deployment.
-Read more: https://nextjs.org/docs/messages/failed-to-find-server-action
-    at ignore-listed frames
-Error: Failed to find Server Action "x". This request might be from an older or newer deployment.
-Read more: https://nextjs.org/docs/messages/failed-to-find-server-action
-    at ignore-listed frames
-Error: Failed to find Server Action "x". This request might be from an older or newer deployment.
-Read more: https://nextjs.org/docs/messages/failed-to-find-server-action
-    at ignore-listed frames
-Error: Failed to find Server Action "x". This request might be from an older or newer deployment.
-Read more: https://nextjs.org/docs/messages/failed-to-find-server-action
-    at ignore-listed frames
+✓ Ready in 355ms
+⨯ ReferenceError: cn is not defined
+    at <unknown> (.next/server/chunks/ssr/_d7d89bed._.js:1:33922)
+    at Array.map (<anonymous>)
+    at aG (.next/server/chunks/ssr/_d7d89bed._.js:1:33842) {
+  digest: '598505554'
+}
+⨯ ReferenceError: cn is not defined
+    at <unknown> (.next/server/chunks/ssr/_d7d89bed._.js:1:33922)
+    at Array.map (<anonymous>)
+    at aG (.next/server/chunks/ssr/_d7d89bed._.js:1:33842) {
+  digest: '598505554'
+}
+⨯ ReferenceError: cn is not defined
+    at <unknown> (.next/server/chunks/ssr/_d7d89bed._.js:1:33922)
+    at Array.map (<anonymous>)
+    at aG (.next/server/chunks/ssr/_d7d89bed._.js:1:33842) {
+  digest: '598505554'
+}
+⨯ ReferenceError: cn is not defined
+    at <unknown> (.next/server/chunks/ssr/_d7d89bed._.js:1:33922)
+    at Array.map (<anonymous>)
+    at aG (.next/server/chunks/ssr/_d7d89bed._.js:1:33842) {
+  digest: '598505554'
+}
+⨯ ReferenceError: cn is not defined
+    at <unknown> (.next/server/chunks/ssr/_d7d89bed._.js:1:33922)
+    at Array.map (<anonymous>)
+    at aG (.next/server/chunks/ssr/_d7d89bed._.js:1:33842) {
+  digest: '598505554'
+}
+⨯ ReferenceError: cn is not defined
+    at <unknown> (.next/server/chunks/ssr/_d7d89bed._.js:1:33922)
+    at Array.map (<anonymous>)
+    at aG (.next/server/chunks/ssr/_d7d89bed._.js:1:33842) {
+  digest: '598505554'
+}
+⨯ ReferenceError: cn is not defined
+    at <unknown> (.next/server/chunks/ssr/_d7d89bed._.js:1:33922)
+    at Array.map (<anonymous>)
+    at aG (.next/server/chunks/ssr/_d7d89bed._.js:1:33842) {
+  digest: '598505554'
+}
+⨯ ReferenceError: cn is not defined
+    at <unknown> (.next/server/chunks/ssr/_d7d89bed._.js:1:33922)
+    at Array.map (<anonymous>)
+    at aG (.next/server/chunks/ssr/_d7d89bed._.js:1:33842) {
+  digest: '598505554'
+}
+⨯ ReferenceError: cn is not defined
+    at <unknown> (.next/server/chunks/ssr/_d7d89bed._.js:1:33922)
+    at Array.map (<anonymous>)
+    at aG (.next/server/chunks/ssr/_d7d89bed._.js:1:33842) {
+  digest: '598505554'
+}
+⨯ ReferenceError: cn is not defined
+    at <unknown> (.next/server/chunks/ssr/_d7d89bed._.js:1:33922)
+    at Array.map (<anonymous>)
+    at aG (.next/server/chunks/ssr/_d7d89bed._.js:1:33842) {
+  digest: '598505554'
+}
+⨯ ReferenceError: cn is not defined
+    at <unknown> (.next/server/chunks/ssr/_d7d89bed._.js:1:33922)
+    at Array.map (<anonymous>)
+    at aG (.next/server/chunks/ssr/_d7d89bed._.js:1:33842) {
+  digest: '598505554'
+}
+⨯ ReferenceError: cn is not defined
+    at <unknown> (.next/server/chunks/ssr/_d7d89bed._.js:1:33922)
+    at Array.map (<anonymous>)
+    at aG (.next/server/chunks/ssr/_d7d89bed._.js:1:33842) {
+  digest: '598505554'
+}
+⨯ ReferenceError: cn is not defined
+    at <unknown> (.next/server/chunks/ssr/_d7d89bed._.js:1:33922)
+    at Array.map (<anonymous>)
+    at aG (.next/server/chunks/ssr/_d7d89bed._.js:1:33842) {
+  digest: '598505554'
+}
+⨯ ReferenceError: cn is not defined
+    at <unknown> (.next/server/chunks/ssr/_d7d89bed._.js:1:33922)
+    at Array.map (<anonymous>)
+    at aG (.next/server/chunks/ssr/_d7d89bed._.js:1:33842) {
+  digest: '598505554'
+}
+⨯ ReferenceError: cn is not defined
+    at <unknown> (.next/server/chunks/ssr/_d7d89bed._.js:1:33922)
+    at Array.map (<anonymous>)
+    at aG (.next/server/chunks/ssr/_d7d89bed._.js:1:33842) {
+  digest: '598505554'
+}
+⨯ ReferenceError: cn is not defined
+    at <unknown> (.next/server/chunks/ssr/_d7d89bed._.js:1:33922)
+    at Array.map (<anonymous>)
+    at aG (.next/server/chunks/ssr/_d7d89bed._.js:1:33842) {
+  digest: '598505554'
+}
+⨯ ReferenceError: cn is not defined
+    at <unknown> (.next/server/chunks/ssr/_d7d89bed._.js:1:33922)
+    at Array.map (<anonymous>)
+    at aG (.next/server/chunks/ssr/_d7d89bed._.js:1:33842) {
+  digest: '598505554'
+}
+⨯ ReferenceError: cn is not defined
+    at <unknown> (.next/server/chunks/ssr/_d7d89bed._.js:1:33922)
+    at Array.map (<anonymous>)
+    at aG (.next/server/chunks/ssr/_d7d89bed._.js:1:33842) {
+  digest: '598505554'
+}

@@ -1,0 +1,8 @@
+
+> fergusonhouse_temp@0.1.0 deploy
+> rm -rf .next && next build && fuser -k 3000/tcp || true && next start -p 3000
+
+▲ Next.js 16.1.6 (Turbopack)
+- Environments: .env
+
+  Creating an optimized production build ...

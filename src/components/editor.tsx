@@ -4,6 +4,12 @@ import React, { useEffect, useState } from "react";
 import { X, Play, Send, CheckCircle2, AlertTriangle, FileText, Code, LayoutGrid, Folder as FolderIcon, ChevronRight } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 const MarkdownLink = (props: any) => {
   const { href, children } = props;
@@ -31,6 +37,9 @@ interface CategoryData {
   id: string;
   name: string;
   posts: Post[];
+  parent?: {
+    name: string;
+  };
 }
 
 export function Editor({ activeFile, onFileSelect }: { activeFile: string; onFileSelect?: (name: string, slug?: string) => void }) {
@@ -43,6 +52,7 @@ export function Editor({ activeFile, onFileSelect }: { activeFile: string; onFil
   const [staticPage, setStaticPage] = useState<any>(null);
   const [categoryData, setCategoryData] = useState<CategoryData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [fullHierarchy, setFullHierarchy] = useState<any[]>([]);
 
   useEffect(() => {
     const isStatic = ["about.me", "services.md", "contact.md", "wowbagger.sh"].includes(activeFile);
@@ -68,6 +78,7 @@ export function Editor({ activeFile, onFileSelect }: { activeFile: string; onFil
       fetch('/api/admin/folders')
         .then(res => res.json())
         .then(data => {
+          setFullHierarchy(data);
           // Flatten the tree to find the folder matching the name or ID
           const findFolder = (folders: any[]): any => {
             for (const f of folders) {
@@ -91,6 +102,13 @@ export function Editor({ activeFile, onFileSelect }: { activeFile: string; onFil
     } else if (activeFile.endsWith(".md")) {
       const slug = activeFile.replace(".md", "");
       setLoading(true);
+      
+      // We need hierarchy for breadcrumbs even on post pages
+      fetch('/api/admin/folders')
+        .then(res => res.json())
+        .then(data => setFullHierarchy(data))
+        .catch(err => console.error(err));
+
       fetch('/api/admin/posts?slug=' + slug)
         .then(res => res.json())
         .then(data => {
@@ -111,6 +129,38 @@ export function Editor({ activeFile, onFileSelect }: { activeFile: string; onFil
       setCategoryData(null);
     }
   }, [activeFile]);
+
+  // Find parent folder for breadcrumbs
+  const getBreadcrumbs = () => {
+    if (["about.me", "services.md", "contact.md", "wowbagger.sh"].includes(activeFile)) {
+      return ["src", activeFile];
+    }
+
+    if (categoryData) {
+      return ["src", "blog", categoryData.name];
+    }
+
+    if (dynamicPost) {
+      // Find which folder this post belongs to
+      const findPostPath = (folders: any[]): string[] | null => {
+        for (const f of folders) {
+          if (f.posts?.some((p: any) => p.slug === dynamicPost.slug)) {
+            return ["src", "blog", f.name, `${dynamicPost.slug}.md`];
+          }
+          if (f.children) {
+            const path = findPostPath(f.children);
+            if (path) return path;
+          }
+        }
+        return null;
+      };
+      return findPostPath(fullHierarchy) || ["src", "blog", activeFile];
+    }
+
+    return ["src", activeFile];
+  };
+
+  const breadcrumbs = getBreadcrumbs();
 
   const fileData = categoryData ? {
     title: activeFile.startsWith("category-") ? `${categoryData.name}.html` : activeFile,
@@ -226,6 +276,27 @@ export function Editor({ activeFile, onFileSelect }: { activeFile: string; onFil
             </button>
           )}
         </div>
+      </div>
+
+      {/* Breadcrumbs Bar */}
+      <div className="flex items-center px-4 py-1.5 bg-[#1e1e1e] border-b border-[#252526] text-[11px] text-gray-500 font-mono overflow-x-auto whitespace-nowrap">
+        {breadcrumbs.map((crumb, idx) => (
+          <React.Fragment key={idx}>
+            <span 
+              className={cn(
+                "hover:text-gray-300 transition-colors cursor-default",
+                idx === breadcrumbs.length - 1 ? "text-gray-400" : "cursor-pointer"
+              )}
+              onClick={() => {
+                if (crumb === "blog") onFileSelect?.("blog.html", "category-blog");
+                else if (idx === 2 && breadcrumbs[1] === "blog") onFileSelect?.(`${crumb}.html`, `category-${crumb}`);
+              }}
+            >
+              {crumb}
+            </span>
+            {idx < breadcrumbs.length - 1 && <ChevronRight className="w-3 h-3 mx-1 flex-shrink-0" />}
+          </React.Fragment>
+        ))}
       </div>
 
       {/* Content Area */}
