@@ -6,7 +6,7 @@ import { Editor } from "@/components/editor";
 import { RecentPosts } from "@/components/recent-posts";
 import { WindowFrame } from "@/components/window-frame";
 import { Logo } from "@/components/logo";
-import { PanelLeftClose, PanelLeftOpen, Clock } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen, PanelRightClose, PanelRightOpen, Clock } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 
 export default function SlugPage() {
@@ -31,7 +31,7 @@ export default function SlugPage() {
 
   const [activeFile, setActiveFile] = useState(getInitialFile(slug));
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [isRecentOpen, setIsRecentOpen] = useState(false);
+  const [isRecentOpen, setIsRecentOpen] = useState(true);
 
   // Update URL when active file changes
   const handleFileSelect = (name: string, slug?: string) => {
@@ -96,8 +96,14 @@ export default function SlugPage() {
 
         <div className={`transition-all duration-300 ease-in-out overflow-hidden flex shrink-0 ${isRecentOpen ? 'w-64' : 'w-0'}`}>
           <div className="flex flex-col w-full h-full">
-            <div className="h-12 bg-[#252526] border-b border-[#333333] flex items-center px-4">
-              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Secondary Sidebar</span>
+            <div className="h-12 bg-[#252526] border-b border-[#333333] flex items-center px-4 justify-between">
+              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Recent Posts</span>
+              <button 
+                onClick={() => setIsRecentOpen(false)}
+                className="text-gray-500 hover:text-white transition-colors"
+              >
+                <PanelRightClose className="w-4 h-4" />
+              </button>
             </div>
             <RecentPosts onPostSelect={handleFileSelect} />
           </div>
