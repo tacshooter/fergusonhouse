@@ -14,10 +14,12 @@ export default function Home() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   // Update URL when active file changes
-  const handleFileSelect = (name: string) => {
+  const handleFileSelect = (name: string, slug?: string) => {
     setActiveFile(name);
-    // Convert filename to pretty URL slug
-    let newSlug = name.replace(/\.md$/, "");
+    
+    // Use the provided slug if available, otherwise derive it from the name
+    let newSlug = slug || name.replace(/\.md$/, "");
+    
     if (newSlug === "about.me") newSlug = "about-me";
     if (newSlug === "contact.md") newSlug = "contact";
     if (newSlug === "wowbagger.sh") newSlug = "wowbagger";
@@ -51,7 +53,7 @@ export default function Home() {
         </div>
 
         <div className="flex-1 flex flex-col min-w-0">
-          <Editor activeFile={activeFile} />
+          <Editor activeFile={activeFile} onFileSelect={handleFileSelect} />
           <div className="h-6 bg-[#007acc] text-white flex items-center px-3 text-[11px] select-none shrink-0">
             <div className="flex items-center space-x-4">
               <span>main*</span>

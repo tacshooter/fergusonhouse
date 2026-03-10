@@ -18,7 +18,7 @@ interface FileItem {
   slug?: string;
 }
 
-export function Sidebar({ activeFile, onFileSelect }: { activeFile: string; onFileSelect: (name: string) => void }) {
+export function Sidebar({ activeFile, onFileSelect }: { activeFile: string; onFileSelect: (name: string, slug?: string) => void }) {
   const [items, setItems] = useState<FileItem[]>([]);
 
   useEffect(() => {
@@ -41,12 +41,23 @@ export function Sidebar({ activeFile, onFileSelect }: { activeFile: string; onFi
           type: "folder",
           children: [
             ...(f.children?.map(mapFolder) || []),
+            // Add a virtual index file for the category to save space
+            ...(f.posts && f.posts.length > 0 ? [{
+              id: `idx-${f.id}`,
+              name: `${f.name}.html`,
+              type: "file" as const,
+              icon: <Code className="w-4 h-4 text-purple-400" />,
+              slug: `category-${f.id}`
+            }] : []),
+            /* 
+            // Hide individual posts to save space, now accessible via .html view
             ...(f.posts?.map((p: any) => ({
               id: p.id,
               name: `${p.slug}.md`,
               type: "file",
               slug: p.slug
             })) || [])
+            */
           ]
         });
 
@@ -97,7 +108,7 @@ export function Sidebar({ activeFile, onFileSelect }: { activeFile: string; onFi
   );
 }
 
-function SidebarItem({ item, depth, activeFile, onFileSelect }: { item: FileItem; depth: number; activeFile: string; onFileSelect: (name: string) => void }) {
+function SidebarItem({ item, depth, activeFile, onFileSelect }: { item: FileItem; depth: number; activeFile: string; onFileSelect: (name: string, slug?: string) => void }) {
   const [isOpen, setIsOpen] = React.useState(true);
   const isActive = activeFile === item.name;
 
@@ -105,7 +116,7 @@ function SidebarItem({ item, depth, activeFile, onFileSelect }: { item: FileItem
     if (item.type === "folder") {
       setIsOpen(!isOpen);
     } else {
-      onFileSelect(item.name);
+      onFileSelect(item.name, item.slug);
     }
   };
 

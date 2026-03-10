@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { X, Play, Send, CheckCircle2, AlertTriangle, FileText, Code } from "lucide-react";
+import { X, Play, Send, CheckCircle2, AlertTriangle, FileText, Code, LayoutGrid, Folder as FolderIcon, ChevronRight } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -27,7 +27,13 @@ interface Post {
   content: string;
 }
 
-export function Editor({ activeFile }: { activeFile: string }) {
+interface CategoryData {
+  id: string;
+  name: string;
+  posts: Post[];
+}
+
+export function Editor({ activeFile, onFileSelect }: { activeFile: string; onFileSelect?: (name: string, slug?: string) => void }) {
   const [isRunning, setIsRunning] = useState(false);
   const [isPreview, setIsPreview] = useState(true);
   const [formData, setFormData] = useState({ name: "", email: "", message: "" });
@@ -35,6 +41,7 @@ export function Editor({ activeFile }: { activeFile: string }) {
   const [errorMsg, setErrorMsg] = useState("");
   const [dynamicPost, setDynamicPost] = useState<Post | null>(null);
   const [staticPage, setStaticPage] = useState<any>(null);
+  const [categoryData, setCategoryData] = useState<CategoryData | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -54,6 +61,33 @@ export function Editor({ activeFile }: { activeFile: string }) {
         .catch(err => console.error(err))
         .finally(() => setLoading(false));
       setDynamicPost(null);
+      setCategoryData(null);
+    } else if (activeFile.endsWith(".html")) {
+      // It's a category view
+      setLoading(true);
+      fetch('/api/admin/folders')
+        .then(res => res.json())
+        .then(data => {
+          // Flatten the tree to find the folder matching the name
+          const findFolder = (folders: any[]): any => {
+            for (const f of folders) {
+              if (`${f.name}.html` === activeFile) return f;
+              if (f.children) {
+                const found = findFolder(f.children);
+                if (found) return found;
+              }
+            }
+            return null;
+          };
+          const folder = findFolder(data);
+          if (folder) {
+            setCategoryData(folder);
+          }
+        })
+        .catch(err => console.error(err))
+        .finally(() => setLoading(false));
+      setDynamicPost(null);
+      setStaticPage(null);
     } else if (activeFile.endsWith(".md")) {
       const slug = activeFile.replace(".md", "");
       setLoading(true);
@@ -70,13 +104,20 @@ export function Editor({ activeFile }: { activeFile: string }) {
         .catch(err => console.error(err))
         .finally(() => setLoading(false));
       setStaticPage(null);
+      setCategoryData(null);
     } else {
       setDynamicPost(null);
       setStaticPage(null);
+      setCategoryData(null);
     }
   }, [activeFile]);
 
-  const fileData = staticPage ? {
+  const fileData = categoryData ? {
+    title: activeFile,
+    subtitle: "// Category: " + categoryData.name,
+    body: "",
+    language: "html"
+  } : (staticPage ? {
     title: staticPage.id,
     subtitle: staticPage.subtitle,
     body: staticPage.content,
@@ -189,8 +230,48 @@ export function Editor({ activeFile }: { activeFile: string }) {
 
       {/* Content Area */}
       <div className="flex-1 p-8 overflow-y-auto font-mono text-sm leading-relaxed">
-        <div className="max-w-3xl mx-auto relative">
-          {isRunning && isContactPage ? (
+        <div className="max-w-4xl mx-auto relative">
+          {categoryData ? (
+            <div className="animate-in fade-in duration-500">
+              <div className="flex items-center space-x-2 mb-8 border-b border-[#333333] pb-4">
+                <LayoutGrid className="w-6 h-6 text-purple-400" />
+                <h1 className="text-2xl font-bold text-[#9cdcfe]">{categoryData.name}</h1>
+                <span className="text-gray-500 text-xs ml-4 font-mono">
+                  {categoryData.posts?.length || 0} items
+                </span>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {categoryData.posts?.map((post) => (
+                  <div 
+                    key={post.id}
+                    onClick={() => onFileSelect && onFileSelect(`${post.slug}.md`, post.slug)}
+                    className="group bg-[#252526] border border-[#333333] hover:border-[#007acc] p-5 rounded-lg cursor-pointer transition-all hover:shadow-lg hover:translate-y-[-2px]"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="p-2 bg-[#1e1e1e] rounded border border-[#333333] group-hover:border-[#007acc]/50 transition-colors">
+                        <FileText className="w-5 h-5 text-gray-400 group-hover:text-blue-400" />
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-blue-400 transition-colors" />
+                    </div>
+                    <h3 className="text-white font-medium group-hover:text-[#9cdcfe] transition-colors line-clamp-2">
+                      {post.title}
+                    </h3>
+                    <p className="text-xs text-gray-500 mt-2 font-mono">
+                      {post.slug}.md
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {categoryData.posts?.length === 0 && (
+                <div className="text-center py-20 bg-[#252526] rounded-lg border border-dashed border-[#333333]">
+                   <FolderIcon className="w-12 h-12 text-gray-700 mx-auto mb-4" />
+                   <p className="text-gray-500">This directory is empty.</p>
+                </div>
+              )}
+            </div>
+          ) : isRunning && isContactPage ? (
             <div className="bg-[#252526] border border-[#333333] rounded-lg p-6 animate-in fade-in zoom-in duration-200 shadow-xl">
               <div className="flex items-center justify-between mb-6">
                 <span className="text-[#9cdcfe]">bash contact.md --execute</span>

@@ -60,12 +60,29 @@ async function main() {
 
   console.log('Created post:', post.id);
 
+  // If we have a specific scheduleId from --from-schedule, use it.
+  // Otherwise, try to find a matching schedule item by slug.
   if (scheduleId) {
     await prisma.blogSchedule.update({
       where: { id: scheduleId },
       data: { status: 'PUBLISHED' }
     });
-    console.log('Updated schedule item status to PUBLISHED.');
+    console.log('Updated schedule item status to PUBLISHED (via ID).');
+  } else {
+    const matchingSchedule = await prisma.blogSchedule.findFirst({
+      where: { 
+        slug: slug,
+        status: { in: ['PENDING', 'SCHEDULED'] }
+      }
+    });
+
+    if (matchingSchedule) {
+      await prisma.blogSchedule.update({
+        where: { id: matchingSchedule.id },
+        data: { status: 'PUBLISHED' }
+      });
+      console.log(`Matched and updated schedule item "${slug}" to PUBLISHED.`);
+    }
   }
 
   // Update hierarchy.json
