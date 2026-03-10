@@ -35,10 +35,48 @@ export default function AdminPage() {
   const [isAdminPreview, setIsAdminPreview] = useState(false);
   const [editingType, setEditingType] = useState<"post" | "static">("post");
 
+  useEffect(() => {
+    const checkAuth = async () => {
+      // First, check localStorage for a fast, optimistic login
+      if (localStorage.getItem("admin_auth") === "true") {
+        setIsLoggedIn(true);
+        refreshData();
+      }
+
+      // Then verify with the server to ensure the session cookie is actually valid
+      try {
+        const res = await fetch("/api/admin/status");
+        if (res.ok) {
+          setIsLoggedIn(true);
+          refreshData();
+        } else {
+          // If the server says no, but we thought we were logged in, clear it
+          localStorage.removeItem("admin_auth");
+          setIsLoggedIn(false);
+        }
+      } catch (e) {
+        console.error("Auth check failed:", e);
+      }
+    };
+    checkAuth();
+  }, []);
+
   const handleLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const res = await fetch("/api/admin/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, password }) });
-    if (res.ok) { setIsLoggedIn(true); refreshData(); } else { setError("Access Denied: Invalid Credentials"); }
+    if (res.ok) { 
+      localStorage.setItem("admin_auth", "true");
+      setIsLoggedIn(true); 
+      refreshData(); 
+    } else { 
+      setError("Access Denied: Invalid Credentials"); 
+    }
+  };
+
+  const handleExit = async () => {
+    await fetch("/api/admin/logout", { method: "POST" });
+    localStorage.removeItem("admin_auth");
+    setIsLoggedIn(false);
   };
 
   const refreshData = () => { fetchFolders(); fetchMessages(); fetchPosts(); fetchStaticPages(); fetchSchedule(); };
@@ -94,7 +132,7 @@ export default function AdminPage() {
     <div className="min-h-screen bg-[#1e1e1e] text-[#d4d4d4] font-mono flex flex-col">
       <div className="h-12 bg-[#323233] border-b border-[#111] flex items-center px-6 shrink-0">
         <div className="flex items-center space-x-3"><div className="w-3 h-3 rounded-full bg-[#27c93f]" /><span className="text-sm font-bold tracking-tight">Wowbagger CMS v1.2</span></div>
-        <button onClick={() => setIsLoggedIn(false)} className="ml-auto text-xs text-gray-500 hover:text-white flex items-center"><LogOut className="w-3 h-3 mr-2" /> EXIT</button>
+        <button onClick={handleExit} className="ml-auto text-xs text-gray-500 hover:text-white flex items-center"><LogOut className="w-3 h-3 mr-2" /> EXIT</button>
       </div>
       <div className="flex-1 flex overflow-hidden">
         <div className="w-64 border-r border-[#333333] bg-[#252526] p-4 flex flex-col shrink-0">

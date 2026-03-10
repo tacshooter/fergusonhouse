@@ -3,7 +3,7 @@ import prisma from '@/lib/prisma';
 import fs from 'fs';
 import path from 'path';
 
-const HIERARCHY_CACHE_PATH = '/home/ubuntu/.openclaw/workspace/fergusonhouse/public/hierarchy.json';
+const HIERARCHY_CACHE_PATH = '/home/ssm-user/.openclaw/workspace/fergusonhouse/public/hierarchy.json';
 
 async function rebuildHierarchyCache() {
   const folders = await prisma.folder.findMany({

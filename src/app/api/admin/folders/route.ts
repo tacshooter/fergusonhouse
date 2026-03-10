@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 
 // Using absolute path based on the known environment
-const HIERARCHY_CACHE_PATH = '/home/ubuntu/.openclaw/workspace/fergusonhouse/public/hierarchy.json';
+const HIERARCHY_CACHE_PATH = '/home/ssm-user/.openclaw/workspace/fergusonhouse/public/hierarchy.json';
 
 export async function GET() {
   try {

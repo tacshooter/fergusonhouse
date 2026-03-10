@@ -52,9 +52,8 @@ model BlogSchedule {
   date      DateTime
   topic     String
   slug      String?
-  status    String   @default("PENDING") // PENDING, SCHEDULED, PUBLISHED
+  status    String   @default("PENDING")
   week_no   Int?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
-

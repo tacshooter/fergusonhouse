@@ -20,9 +20,24 @@ async function main() {
   ];
 
   for (const item of schedule) {
-    await prisma.blogSchedule.create({
-      data: item
+    // Upsert using a unique key or just find first
+    const existing = await prisma.blogSchedule.findFirst({
+      where: {
+        date: item.date,
+        topic: item.topic
+      }
     });
+
+    if (existing) {
+      await prisma.blogSchedule.update({
+        where: { id: existing.id },
+        data: item
+      });
+    } else {
+      await prisma.blogSchedule.create({
+        data: item
+      });
+    }
   }
 
   console.log("Blog schedule seeded successfully.");

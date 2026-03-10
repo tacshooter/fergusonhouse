@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
+import { setSession } from '@/lib/auth';
 
 export async function POST(request: Request) {
   const body = await request.json();
   const { username, password } = body;
 
   if (username === process.env.ADMIN_USERNAME && password === process.env.ADMIN_PASSWORD) {
-    // In a real app, we'd set a cookie/session here.
-    // For now, we'll just return success.
+    await setSession();
     return NextResponse.json({ success: true });
   }
 
